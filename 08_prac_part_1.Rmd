@@ -44,7 +44,6 @@ We will reuse data prepared yesterday.
 SA2_SEIFA <- readRDS("data/clean/SA2_SEIFA.Rds")
 ```
 
-
 # Data: Airbnb in Melbourne
 
 ## Background information
@@ -194,15 +193,15 @@ room_densities <- listings_sf_proj %>%
 
 tm_shape(room_densities$polygons) +
   tm_fill(col = "level", palette = "YlOrRd", 
-          title = expression("Room price")) +
-  tm_shape(home_densities$polygons) +
-  tm_fill(col = "level", palette = "YlOrRd", 
-          title = expression("Home/apt price")) 
+          title = expression("Room price"))
 
 ```
 
 
 
+# Further topics
+
+1. If room done - then hose or vice versa?
 
 # Resources
 

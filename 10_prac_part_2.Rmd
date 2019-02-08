@@ -34,7 +34,12 @@ if (!require("tmap")) install.packages("tmap"); library("tmap")
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
 ```
 
-# Your third geovizualization - mapping Airbnb in Melbourne
+# Spatial clustering
 
+## Global
+
+## Local
+
+# Spatial overlay
 
 
