@@ -27,26 +27,25 @@ set.seed(1234)
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
 if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
+if (!require("tmaptools")) install.packages("tmaptools"); library("tmaptools")
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
 
 if (!require("skimr")) install.packages("skimr"); library("skimr")
 
 ```
 
-# Data sources
-
-## SA2s and SEIFA
+# Data: SA2s and SEIFA
 
 We will reuse data prepared yesterday.
 
-### Code
+## Code
 
 ```{r}
 SA2_SEIFA <- readRDS("data/clean/SA2_SEIFA.Rds")
 ```
 
 
-# Airbnb in Melbourne
+# Data: Airbnb in Melbourne
 
 ## Background information
 
@@ -65,6 +64,8 @@ listings <- read_csv("./data/clean/listings.csv")
 ```
 
 ### Explanation
+
+point to difference `csv`
 
 ## Examine the data
 
@@ -98,59 +99,32 @@ slice(listings_sf, 1:5)
 
 http://spatialreference.org/ref/epsg/wgs-84/ 
 
-## Your first map
+## Map of locations
+
+### Code 
 
 ```{r}
 tmap_mode("view")
-qtm(listings_sf)
+
+listings_sf %>% 
+  sample_n(1000) %>% 
+  qtm()
 ```
 
-## Improving your map
+### Explanation
+
+## Exploring attributes
 
 Map variable in your data to visual encoding on map.
+
+### Code 
 
 ```{r}
 ggplot(listings_sf, aes(price)) + geom_histogram()
 ```
 
 ```{r}
-summary(listings_sf$price)
-```
-
-```{r}
-listings_sf %>% 
-  sample_n(1000) %>%
-  tm_shape() + 
-  tm_dots(col = "price", style = "quantile", n = 10, palette = "RdYlGn")
-```
-
-`tmaptools::palette_explorer()`
-
-
-## Static map
-
-```{r}
-tmap_mode("plot")
-qtm(listings_sf)
-```
-
-## Improving your map
-
-```{r}
-listings_sf %>% 
-  # sample_n(1000) %>%
-  tm_shape() + 
-  tm_dots(col = "price", title = "Price of listing",
-          style = "quantile", n = 10, 
-          palette = "RdYlGn", legend.hist = T) +  
-  tm_scale_bar(position = c("left", "bottom")) +
-  tm_compass(position = c("left", "top"))+
-  tm_layout(frame = F, 
-            main.title = "Price of Airbnb listing in Melbourne",
-            main.title.size = 1.25, 
-            main.title.position = c("left", "top"),
-            legend.hist.size = 0.5, 
-            legend.outside = T)
+descr(listings_sf$price)
 ```
 
 ```{r}
@@ -163,29 +137,76 @@ listings_sf %>%
   ggplot(aes(room_type, price)) + geom_boxplot() + scale_y_log10()
 ```
 
+
 ```{r}
 listings_sf %>% 
-  filter(room_type != "Shared room") %>% 
-  # sample_n(1000) %>%
+  sample_n(1000) %>%
   tm_shape() + 
-  tm_dots(col = "price", title = "Price of listing",
-          style = "quantile", n = 10, 
-          palette = "RdYlGn", legend.hist = T) +  
-  tm_scale_bar(position = c("left", "bottom")) +
-  tm_compass(position = c("left", "top"))+
-  tm_layout(frame = F, 
-            main.title = "Price of Airbnb listing in Melbourne",
-            main.title.size = 1.25, 
-            main.title.position = c("left", "top"),
-            legend.hist.size = 0.5, 
-            legend.outside = T) +
-  tm_facets(by = "room_type")
+  tm_dots(col = "price", style = "quantile", n = 5, palette = "seq")
+```
+
+```{r}
+listings_sf %>% 
+  sample_n(1000) %>%
+  tm_shape() + 
+  tm_dots(col = "room_type", style = "cat", n = 5, palette = "seq")
+```
+
+# Mapping price density 
+
+GDA_1994_Geoscience_Australia_Lambert
+WKID: 3112 Authority: EPSG
+
+GDA_1994_Australia_Albers
+WKID: 3577 Authority: EPSG
+
+## Data preparation
+
+### Code 
+
+### Explanation
+
+## Density calculation
+
+### Code 
+
+### Explanation
+
+
+```{r}
+listings_sf_proj <- st_transform(listings_sf, 3112)
+
+frq(listings_sf_proj$room_type)
+
+outline <- SA2_SEIFA %>% st_union %>% st_transform(3112)
+
+home_densities <- listings_sf_proj %>% 
+  filter(room_type == "Entire home/apt") %>% 
+  smooth_map(var = price, 
+             cover = outline, 
+             breaks = c(0, 1, 5, 10, 25, 50, 100, 250, 500, 1000))
+
+room_densities <- listings_sf_proj %>% 
+  filter(room_type == "Private room") %>% 
+  smooth_map(var = price, 
+             cover = outline, 
+             breaks = c(0, 1, 5, 10, 25, 50, 100, 250, 500, 1000))
+
+tm_shape(room_densities$polygons) +
+  tm_fill(col = "level", palette = "YlOrRd", 
+          title = expression("Room price")) +
+  tm_shape(home_densities$polygons) +
+  tm_fill(col = "level", palette = "YlOrRd", 
+          title = expression("Home/apt price")) 
 
 ```
 
 
+
+
 # Resources
 
-
+Anselin, L. 1995. Local indicators of spatial association - LISA. Geographical Analysis 27:93-115.
+https://doi.org/10.1111/j.1538-4632.1995.tb00338.x
 
 
