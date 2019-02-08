@@ -1,0 +1,152 @@
+---
+title: "R and spatial data: introduction 2"
+author: "Radoslaw Panczak"
+date: 2019-02-25
+output: 
+  html_document: 
+    # css: custom.css
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    number_sections: true
+    theme: united 
+    highlight: pygments 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
+if (!require("sf")) install.packages("sf"); library("sf")
+if (!require("tmap")) install.packages("tmap"); library("tmap")
+if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
+
+SA2_SEIFA <- readRDS("data/clean/SA2_SEIFA.Rds")
+```
+
+# Mapping SEIFA indices in Melbourne - interactive maps
+
+## Quick maps
+
+### Code
+
+```{r}
+tmap_mode("view")
+SA2_SEIFA %>% 
+  qtm(fill = "IRSAD_d")
+```
+
+```{r}
+SA2_SEIFA %>% 
+  qtm(fill = "IRSD_s")
+```
+
+### Explanation
+
+
+## Improving choropleth maps
+
+### Code
+
+```{r}
+tm_shape(SA2_SEIFA) +
+  tm_polygons(col = "IRSAD_d", 
+              n = 10, alpha = 0.7, palette = "RdYlGn", lwd = 0)
+```
+
+### Explanation
+
+`tmaptools::palette_explorer()`
+
+
+## Faceted maps
+
+
+### Code
+
+```{r}
+tm_shape(SA2_SEIFA) +
+  tm_polygons(col = c("IRSAD_d", "IER_d"), 
+              n = 10, alpha = 0.7, palette = "RdYlGn", lwd = 0) +
+  tm_facets(sync = TRUE, ncol = 2)
+```
+
+### Explanation
+
+
+## Proportional symbol map
+
+### Code
+
+```{r}
+tm_shape(SA2_SEIFA) +
+  tm_borders() +
+  tm_bubbles(col = "IRSAD_d", size = "URP", 
+             n = 10, alpha = 0.7, palette = "RdYlGn", border.lwd = 0, scale = 0.5)
+
+```
+
+### Explanation
+
+This type of map uses size of symbols to represent numeric variable on a map.
+
+
+# Mapping SEIFA indices in Melbourne - static maps
+
+Interactive maps are great for exploration. On other occasions ‘static’ map can be a better option, for instance when you want to include it in printed report. We will learn how to create one with slightly more advanced use of `tmap` library functions.
+
+## Quick map
+
+### Code
+
+```{r}
+tmap_mode("plot")
+
+tm_shape(SA2_SEIFA) +
+  tm_polygons("IRSAD_d", title = "IRSAD deciles", 
+              palette = "RdYlGn", n = 10, lwd = 0) 
+```
+
+
+### Explanation
+
+First we instructed tmap package to change from interactive mode into static mode with `tmap_mode()` function. Notice that rest of parameters is the same as in interactive mode.
+
+
+## Improving choropleth maps
+
+### Code
+
+```{r}
+tm_shape(SA2_SEIFA) +
+  tm_polygons("IRSAD_d", title = "IRSAD deciles", 
+              palette = "RdYlGn", n = 10, lwd = 0,
+              legend.hist = T) +
+  tm_scale_bar(position = c("right", "bottom")) +
+  tm_compass(position = c("left", "top"))+
+  tm_layout(frame = F, 
+            main.title = "IRSAD deciles of SA2 areas in Melbourne",
+            main.title.size = 1.25, 
+            main.title.position = c("left", "top"),
+            legend.hist.size = 0.5, 
+            legend.outside = T)
+```
+
+
+### Explanation
+
+We have built a map layer by layer, calling different functions and specifying various arguments. We also improved the cartography by providing legend and a histogram (a graph of distribution of values). 
+We specified our data source in `tm_shape()` function; many parameters indicating how polygons are displayed are specified in `tm_polygons()` function; we also added north arrow and scale with functions names appropriately; finally `tm_layout` helped us to put all small details together as legend and title). 
+
+Last but not least we saved our map can be saved as file on the disk. That can be done with a call `tmap_save(tmap_last(), "path_to_save/name.png")`. Notice that we used function inside a finction there to use last displayed map.
+
+
+# Further topics
+
+1. Try mapping indices other than `IRSAD`.
+
+2. Try creating static map with proportianl symbols.
+
+3. Try creating static maps with facets.
+
+# Resources

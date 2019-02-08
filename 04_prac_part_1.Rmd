@@ -1,0 +1,228 @@
+---
+title: "R and spatial data: introduction 1"
+author: "Radoslaw Panczak"
+date: 2019-02-25
+output: 
+  html_document: 
+    # css: custom.css
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    number_sections: true
+    theme: united 
+    highlight: pygments 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setting up for the journey
+
+## Start your project 
+
+Open Rstudio, create a project, create a new R markdown document (recommended) or R script.
+
+## Conventions used in the materials
+
+screenshot and description
+
+## Load the libraries
+
+```{r}
+if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
+if (!require("sf")) install.packages("sf"); library("sf")
+if (!require("tmap")) install.packages("tmap"); library("tmap")
+if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
+```
+
+# Mapping SA2 areas in Melbourne
+
+## Background information 
+
+### SEIFA
+
+We will work with data from Austrlian Bureau of Statistics (ABS) that describe geographical areas using set of Census 2016 indicators. We will use Socio-Economic Indexes for Areas (SEIFA):
+
+> an ABS product that ranks areas in Australia according to relative socio-economic advantage and disadvantage. 
+
+> SEIFA 2016 has been created from Census 2016 data and consists of four indexes: The Index of Relative Socio-economic Disadvantage (IRSD); The Index of Relative Socio-economic Advantage and Disadvantage (IRSAD); The Index of Education and Occupation (IEO); The Index of Economic Resources (IER).
+
+> Each index is a summary of a different subset of Census variables and focuses on a different aspect of socio-economic advantage and disadvantage.
+
+More information and the data can be found [here](http://www.abs.gov.au/AUSSTATS/abs@.nsf/Lookup/2033.0.55.001Main+Features12016?OpenDocument).
+
+### SA2 
+
+An important piece of information when using census is the geography to which the data refer. ABS data are disseminated based on a number of geographies classified according to the Australian Statistical Geography Standard (ASGS). 
+
+![ASGS ABS Structures. Source: Australian Bureau of Statistics.](images/ASGS.jpg)
+
+Mesh Blocks (MBs) are the smallest geographical areas defined. Due to confidentiality concerns however, data are more commonly analysed using units that are higher up the hierarchy - the Statistical Areas. Statistical Areas Level 2 (**SA2s**) are a common choice for small area analyses and ABS describes them as:
+
+> designed to reflect functional areas that represent a community that interacts together socially and economically. They consider Suburb and Locality boundaries to improve the geographic coding of data to these areas and in major urban areas SA2s often reflect one or more related suburbs. The SA2 is the smallest area for the release of many ABS statistics, including the Estimated Resident Population (ERP), Health & Vitals and Building Approvals data. SA2s generally have a population range of 3,000 to 25,000 persons, and have an average population of about 10,000 persons. 
+
+You can find more information about ASGS [here](abs.gov.au/websitedbs/D3310114.nsf/home/Australian+Statistical+Geography+Standard+(ASGS)). We will use SA2 areas in our analyses.
+
+## Load spatial data
+
+### Code 
+
+```{r}
+SA2_2016_MELB <- st_read("./data/clean/SA2_2016_MELB.shp") %>% 
+  st_set_crs(4283)
+```
+
+### Explanation
+
+`st_read`
+`st_set_crs`
+Remind about difference of `<-` and pipe `%>%`
+
+## Examine spatial data (1)
+
+### Code 
+
+```{r}
+tmap_mode("view")
+qtm(SA2_2016_MELB)
+```
+
+### Explanation
+
+This are simple maps representing Statistical Area Level 2 (SA2) polygons overlaid on background maps. Click around - this is an interactive map that allows you zooming in and out, identify region and change background maps. See if you can find buttons that let you export the map, move it to spearate window or change background maps.
+
+## Examine spatial data (2)
+
+### Code 
+
+```{r}
+table(droplevels(st_geometry_type(SA2_2016_MELB)))
+st_crs(SA2_2016_MELB)
+st_bbox(SA2_2016_MELB)
+```
+
+
+### Explanation
+
+
+## Examine data
+
+### Code 
+
+```{r}
+nrow(SA2_2016_MELB)
+names(SA2_2016_MELB)
+str(SA2_2016_MELB)
+```
+
+### Explanation
+
+Pay attention to `Classes`
+
+
+# SEIFA indices 
+
+## Load attribute data
+
+### Code
+
+```{r}
+SEIFA <- readRDS("data/clean/SEIFA.Rds")
+```
+
+### Explanation
+
+
+## Examine data
+
+### Code 
+
+```{r}
+nrow(SEIFA)
+names(SEIFA)
+str(SEIFA)
+```
+
+### Explanation
+
+
+## Examine variables (1)
+
+### Code 
+
+```{r}
+descr(SEIFA, IRSAD_s)
+descr(SEIFA, IRSAD_d)
+frq(SEIFA, IRSAD_d)
+```
+
+```{r}
+frq(SEIFA, IRSAD_d)
+```
+
+```{r}
+SEIFA %>%
+  group_by(IRSAD_d) %>%
+  descr(IRSAD_s)
+```
+
+### Explanation
+
+
+## Examine variables (2)
+
+### Code 
+
+```{r}
+ggplot(SEIFA, aes(IRSAD_s)) + geom_histogram()
+```
+
+```{r}
+ggplot(SEIFA, aes(IRSAD_d)) + geom_bar()
+```
+
+```{r}
+ggplot(SEIFA, aes(as.factor(IRSAD_d), IRSAD_s)) + geom_boxplot()
+```
+
+### Explanation
+
+## Linking geography and attributes
+
+### Code
+
+```{r}
+SA2_SEIFA <- left_join(SA2_2016_MELB, SEIFA, by = c("SA2_MAIN16", "SA2_MAIN16"))
+```
+
+```{r}
+table(is.na(SA2_SEIFA$IRSAD_s))
+```
+
+```{r}
+SA2_SEIFA %>% 
+  filter(is.na(IRSAD_s)) %>% 
+  qtm(fill = "red", fill.alpha = 0.5, border = NULL)
+```
+
+## Saving your data
+
+### Code 
+
+```{r}
+saveRDS(SA2_SEIFA, "data/clean/SA2_SEIFA.Rds")
+```
+
+### Explanation
+
+
+# Further topics
+
+1. Examine SEIFA indices for Melbourne in the same manner as you did for the whole Austrlia (section "Examine variables"). What differences do you see? How could you explain them?
+
+2. Examine relationships between different indices for Autralia and Melbourne area. What kind of graphs and statistics could be useful here?
+
+# Resources
+
+Map of different geographies used by ABS http://stat.abs.gov.au/itt/r.jsp?ABSMaps

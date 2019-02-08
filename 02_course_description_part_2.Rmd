@@ -1,0 +1,29 @@
+---
+title: 'R and spatial data: an intermediate'
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  word_document:
+    toc: no
+  html_document:
+    highlight: pygments
+    theme: united
+    toc: no
+---
+
+<!-- ------------------------------------------------------------ --> 
+<!-- ------------------------------------------------------------ --> 
+
+
+The UQ Library Centre for Digital Scholarship (CDS) together with Quensland Centre for Population Research (QCPR) are offering a free intermediate, hands-on session for intermediate R users.
+
+The session will introduce capabilities of R software aimed at handling spatial data. We will built upon previous CDS course (R and spatial data: an introduction) and introduce the participants to basics of analysing geographical data. 
+
+What this session will cover:
+
+- Introduce fundamental spatial analysis concepts
+- Useful packages for analysing spatial data
+- Linking multiple data sources 
+- Investigating and characterising spatial patterns in data
+
+The software is available on the training room's computers. If you prefer to use your own laptop, you are also welcome to bring it in (but please install the software beforehand, or come 20 minutes earlier if you need to install the software).

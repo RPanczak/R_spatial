@@ -1,0 +1,174 @@
+---
+title: "R and spatial data: intermediate 1"
+author: "Radoslaw Panczak"
+date: 2019-02-25
+output: 
+  html_document: 
+    # css: custom.css
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    number_sections: true
+    theme: united 
+    highlight: pygments 
+---
+
+# Maintenance 
+
+## Restart R session in Rstudio
+
+Use keyboard shortcut `Ctrl + Shift + F10`
+
+Check environment
+
+Explain why
+
+## Load the libraries
+
+```{r}
+set.seed(1234)
+library(tidyverse) # data manipulation and graphs
+library(sf) # simple features to handle geographical data
+library(tmap) # mapping library
+library(skimr) # summarizing data
+```
+
+# Your third geovizualization - mapping Airbnb in Melbourne
+
+# Background information
+
+[Inside Airbnb](http://insideairbnb.com/about.html) is website that describes itself as:
+
+> an independent, non-commercial set of tools and data that allows you to explore how Airbnb is really being used in cities around the world. By analyzing publicly available information about a city's Airbnb's listings, Inside Airbnb provides filters and key metrics so you can see how Airbnb is being used to compete with the residential housing market.
+
+The dataset is not offically approved by Airbnb but is released under open license and in the absence of other data - was used by many research projects around the world.
+
+# Data input
+
+## Read the data
+
+```{r}
+listings <- read_csv("./data/clean/listings.csv")
+```
+
+## Examine the data
+
+```{r}
+slice(listings, 1:5)
+```
+
+```{r, results='asis' }
+skim(listings) %>% skimr::kable()
+```
+
+## Turning data spatial
+
+http://spatialreference.org/ref/epsg/wgs-84/ 
+
+```{r}
+listings_sf = st_as_sf(listings, coords = c("longitude", "latitude"), crs = 4326)
+```
+
+Look at the difference
+
+```{r}
+slice(listings_sf, 1:5)
+```
+
+## Your first map
+
+```{r}
+tmap_mode("view")
+qtm(listings_sf)
+```
+
+## Improving your map
+
+Map variable in your data to visual encoding on map.
+
+```{r}
+ggplot(listings_sf, aes(price)) + geom_histogram()
+```
+
+```{r}
+summary(listings_sf$price)
+```
+
+```{r}
+listings_sf %>% 
+  sample_n(1000) %>%
+  tm_shape() + 
+  tm_dots(col = "price", style = "quantile", n = 10, palette = "RdYlGn")
+```
+
+`tmaptools::palette_explorer()`
+
+
+## Static map
+
+```{r}
+tmap_mode("plot")
+qtm(listings_sf)
+```
+
+## Improving your map
+
+```{r}
+listings_sf %>% 
+  # sample_n(1000) %>%
+  tm_shape() + 
+  tm_dots(col = "price", title = "Price of listing",
+          style = "quantile", n = 10, 
+          palette = "RdYlGn", legend.hist = T) +  
+  tm_scale_bar(position = c("left", "bottom")) +
+  tm_compass(position = c("left", "top"))+
+  tm_layout(frame = F, 
+            main.title = "Price of Airbnb listing in Melbourne",
+            main.title.size = 1.25, 
+            main.title.position = c("left", "top"),
+            legend.hist.size = 0.5, 
+            legend.outside = T)
+```
+
+```{r}
+listings_sf %>% 
+  ggplot(aes(room_type)) + geom_bar()
+```
+
+```{r}
+listings_sf %>% 
+  ggplot(aes(room_type, price)) + geom_boxplot() + scale_y_log10()
+```
+
+```{r}
+listings_sf %>% 
+  filter(room_type != "Shared room") %>% 
+  # sample_n(1000) %>%
+  tm_shape() + 
+  tm_dots(col = "price", title = "Price of listing",
+          style = "quantile", n = 10, 
+          palette = "RdYlGn", legend.hist = T) +  
+  tm_scale_bar(position = c("left", "bottom")) +
+  tm_compass(position = c("left", "top"))+
+  tm_layout(frame = F, 
+            main.title = "Price of Airbnb listing in Melbourne",
+            main.title.size = 1.25, 
+            main.title.position = c("left", "top"),
+            legend.hist.size = 0.5, 
+            legend.outside = T) +
+  tm_facets(by = "room_type")
+
+```
+
+
+# Resources
+
+Short video introducing projections https://www.youtube.com/watch?v=kIID5FDi2JQ 
+
+Learn more about simple features and `sf` library https://r-spatial.github.io/sf/
+
+Data Carpentry’s Geospatial Workshop http://datacarpentry.org/geospatial-workshop/
+
+
+
+

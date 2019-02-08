@@ -1,0 +1,133 @@
+---
+title: "R and spatial data: introduction 1"
+author: "Radoslaw Panczak"
+date: 2019-02-25
+output: 
+  ioslides_presentation: 
+    highlight: pygments
+    keep_md: yes
+    widescreen: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(sf)
+library(tmap)
+library(emo)
+```
+
+## Why analyse data?
+
+![](./images/donut.jpg)
+
+## Setting things in context
+
+- `r emo::ji("face_with_head_bandage")` patients admitted to hospital 
+
+- `r emo::ji("taxi")` traffic in the city 
+
+- `r emo::ji("selfie")` social media posts 
+
+- `r emo::ji("cloud_with_lightning_and_rain")` weather patterns
+
+- `r emo::ji("monkey")` animal movement 
+
+- `r emo::ji("cherries")` agricultural output 
+
+- `r emo::ji("computer")` pixels on images 
+
+
+## Setting things in context
+
+- `r emo::ji("face_with_head_bandage")` patients admitted to hospital `r emo::ji("globe_with_meridians")`
+
+- `r emo::ji("taxi")` traffic in the city `r emo::ji("globe_with_meridians")`
+
+- `r emo::ji("selfie")` social media posts `r emo::ji("globe_with_meridians")`
+
+- `r emo::ji("cloud_with_lightning_and_rain")` weather patterns `r emo::ji("globe_with_meridians")`
+
+- `r emo::ji("monkey")` animal movement `r emo::ji("globe_with_meridians")`
+
+- `r emo::ji("cherries")` agricultural output `r emo::ji("globe_with_meridians")`
+
+- `r emo::ji("computer")` pixels on images `r emo::ji("globe_with_meridians")`
+
+
+## Why R spatial?
+
+![](./images/R.jpg)
+
+
+## Is my data spatial?
+
+```{r, include=FALSE}
+listings <- read_csv("./data/clean/listings.csv")
+```
+
+```{r}
+listings %>% select(-host_id) %>% slice(1:5)
+```
+
+## Is my data spatial?
+
+```{r}
+ggplot(listings, aes(x = longitude, y = latitude)) + geom_point()
+```
+
+## Is my data spatial?
+
+```{r, include=FALSE}
+SA2_2016_MELB <- st_read("./data/clean/SA2_2016_MELB.shp")
+```
+
+```{r}
+SA2_2016_MELB %>% select(-starts_with("SA4")) %>% slice(1:5)
+```
+
+## Is my data spatial?
+
+```{r}
+ggplot(SA2_2016_MELB) + geom_sf()
+```
+
+## What is special about spatial (1)?
+
+```{r}
+table(st_geometry_type(SA2_2016_MELB))
+```
+
+## Vector data
+
+![](./images/vector.png)
+
+Image Source: NEON, via Data Carpentry
+
+
+## Raster data
+
+![](./images/raster.png)
+
+Image Source: NEON, via Data Carpentry
+
+
+## What is special about spatial (2)?
+
+```{r}
+st_crs(SA2_2016_MELB)
+```
+
+> - ... allowing "every location on Earth to be specified by a set of numbers, letters or symbols" 
+
+> - ... but "To specify a location on a plane requires a map projection." [Wikipedia](https://en.wikipedia.org/wiki/Geographic_coordinate_system)
+
+
+## What we are going to cover 
+
+- Read, create and manipulate spatial data
+- Work with vector point and polygon data
+- Create an interactive map
+- Create a static map
+- Learn basics of cartography 

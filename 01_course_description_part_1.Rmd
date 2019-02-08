@@ -1,0 +1,25 @@
+---
+title: 'R and spatial data: an introduction'
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    highlight: pygments
+    keep_md: yes
+    theme: united
+  word_document: default
+---
+
+The UQ Library Centre for Digital Scholarship (CDS) together with Quensland Centre for Population Research (QCPR) are offering a free introductory, hands-on session for intermediate R users.
+
+The session will introduce capabilities of R software aimed at handling spatial data. We will built upon previous CDS courses (R with RStudio: getting started, R data manipulation with RStudio and dplyr: an introduction, R data visualisation with RStudio and ggplot2: an introduction, R data visualisation with RStudio and ggplot2: intermediate) and introduce the participants to basics of manipulating and visualizing geographical data. 
+
+What this session will cover:
+
+- Introduce fundamental spatial concepts
+- Sources of spatial data 
+- Useful packages for handling spatial data
+- Import and manipulation of spatial data in R environment 
+- Basic cartography in R environment
+
+The software is available on the training room's computers. If you prefer to use your own laptop, you are also welcome to bring it in (but please install the software beforehand, or come 20 minutes earlier if you need to install the software).

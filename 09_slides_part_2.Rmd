@@ -1,0 +1,23 @@
+---
+title: "R and spatial data: intermediate 1"
+author: "Radoslaw Panczak"
+date: 2019-02-25
+output: 
+  ioslides_presentation: 
+    highlight: pygments
+    keep_md: yes
+    widescreen: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(sf)
+library(tmap)
+library(emo)
+```
+
+## Slide 1
+
+![](./images/donut.jpg)
