@@ -30,9 +30,15 @@ screenshot and description
 ## Load the libraries
 
 ```{r}
+set.seed(1234)
+
+# data manipulation and graphs
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
+# simple features to handle geographical data
 if (!require("sf")) install.packages("sf"); library("sf")
+# mapping library
 if (!require("tmap")) install.packages("tmap"); library("tmap")
+# summarizing data
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
 ```
 

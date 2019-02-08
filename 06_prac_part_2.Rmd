@@ -16,6 +16,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+set.seed(1234)
+
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
 if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")

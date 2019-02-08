@@ -27,12 +27,14 @@ Explain why
 
 ```{r}
 set.seed(1234)
-library(tidyverse) # data manipulation and graphs
-library(sf) # simple features to handle geographical data
-library(tmap) # mapping library
-library(skimr) # summarizing data
+
+if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
+if (!require("sf")) install.packages("sf"); library("sf")
+if (!require("tmap")) install.packages("tmap"); library("tmap")
+if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
 ```
 
-# Your 
+# Your third geovizualization - mapping Airbnb in Melbourne
+
 
 

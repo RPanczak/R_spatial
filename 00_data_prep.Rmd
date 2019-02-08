@@ -25,7 +25,11 @@ library(sf)
 library(tmap)
 ```
 
-## Inside Airbnb
+# What is it?
+
+Short script to prepare the dataset used in the course. Not needed by students but left for the curious ones. Simple data preps steps trying to remove some problems, making data smaller, etc.
+
+# Inside Airbnb
 
 Inside Airbnb data for Melbourne obtained from http://insideairbnb.com/about.html. Verision of the data (`Date compiled`) is `07 December, 2018`.
 
@@ -38,9 +42,9 @@ listings <- read_csv("data/raw/inside_airbnb/listings.csv") %>%
 write_csv(listings, "data/clean/listings.csv")
 ```
 
-## SEIFA
+# SEIFA
 
-### Tabular data
+## Tabular data
 
 Socio-Economic Indexes for Areas (SEIFA) obtained from [ABS](http://www.abs.gov.au/AUSSTATS/abs@.nsf/Lookup/2033.0.55.001Main+Features12016?OpenDocument)
 
@@ -67,7 +71,7 @@ saveRDS(SEIFA, "data/clean/SEIFA.Rds")
 ```
 
 
-### SA2s
+## SA2s
 
 SA2 files from [Australian Statistical Geography Standard (ASGS)](http://www.abs.gov.au/ausstats/abs@.nsf/mf/1270.0.55.001)
 

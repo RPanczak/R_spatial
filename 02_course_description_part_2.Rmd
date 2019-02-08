@@ -1,5 +1,5 @@
 ---
-title: 'R and spatial data: an intermediate'
+title: 'R and spatial data: intermediate'
 author: "Radoslaw Panczak"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:

@@ -15,43 +15,60 @@ output:
 
 # Maintenance 
 
-## Restart R session in Rstudio
+## Start R session and Rstudio
 
-Use keyboard shortcut `Ctrl + Shift + F10`
-
-Check environment
-
-Explain why
+You might want to continue using project from yesterday.
 
 ## Load the libraries
 
 ```{r}
 set.seed(1234)
-library(tidyverse) # data manipulation and graphs
-library(sf) # simple features to handle geographical data
-library(tmap) # mapping library
-library(skimr) # summarizing data
+
+if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
+if (!require("sf")) install.packages("sf"); library("sf")
+if (!require("tmap")) install.packages("tmap"); library("tmap")
+if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
+
+if (!require("skimr")) install.packages("skimr"); library("skimr")
+
 ```
 
-# Your third geovizualization - mapping Airbnb in Melbourne
+# Data sources
 
-# Background information
+## SA2s and SEIFA
+
+We will reuse data prepared yesterday.
+
+### Code
+
+```{r}
+SA2_SEIFA <- readRDS("data/clean/SA2_SEIFA.Rds")
+```
+
+
+# Airbnb in Melbourne
+
+## Background information
 
 [Inside Airbnb](http://insideairbnb.com/about.html) is website that describes itself as:
 
 > an independent, non-commercial set of tools and data that allows you to explore how Airbnb is really being used in cities around the world. By analyzing publicly available information about a city's Airbnb's listings, Inside Airbnb provides filters and key metrics so you can see how Airbnb is being used to compete with the residential housing market.
 
-The dataset is not offically approved by Airbnb but is released under open license and in the absence of other data - was used by many research projects around the world.
+The dataset is not offically approved by Airbnb (!) but is released under open license and in the absence of other data - was used by many research projects around the world.
 
-# Data input
+## Reading the data
 
-## Read the data
+### Code 
 
 ```{r}
 listings <- read_csv("./data/clean/listings.csv")
 ```
 
+### Explanation
+
 ## Examine the data
+
+### Code 
 
 ```{r}
 slice(listings, 1:5)
@@ -61,19 +78,25 @@ slice(listings, 1:5)
 skim(listings) %>% skimr::kable()
 ```
 
+### Explanation
+
 ## Turning data spatial
 
-http://spatialreference.org/ref/epsg/wgs-84/ 
+### Code 
 
 ```{r}
 listings_sf = st_as_sf(listings, coords = c("longitude", "latitude"), crs = 4326)
 ```
+
+### Explanation
 
 Look at the difference
 
 ```{r}
 slice(listings_sf, 1:5)
 ```
+
+http://spatialreference.org/ref/epsg/wgs-84/ 
 
 ## Your first map
 
@@ -162,12 +185,6 @@ listings_sf %>%
 
 
 # Resources
-
-Short video introducing projections https://www.youtube.com/watch?v=kIID5FDi2JQ 
-
-Learn more about simple features and `sf` library https://r-spatial.github.io/sf/
-
-Data Carpentry’s Geospatial Workshop http://datacarpentry.org/geospatial-workshop/
 
 
 
