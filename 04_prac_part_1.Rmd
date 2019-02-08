@@ -77,6 +77,7 @@ SA2_2016_MELB <- st_read("./data/clean/SA2_2016_MELB.shp") %>%
 
 `st_read`
 `st_set_crs`
+
 Remind about difference of `<-` and pipe `%>%`
 
 ## Examine spatial data (1)
@@ -226,3 +227,10 @@ saveRDS(SA2_SEIFA, "data/clean/SA2_SEIFA.Rds")
 # Resources
 
 Map of different geographies used by ABS http://stat.abs.gov.au/itt/r.jsp?ABSMaps
+
+Short video introducing projections https://www.youtube.com/watch?v=kIID5FDi2JQ 
+
+Learn more about simple features and `sf` library https://r-spatial.github.io/sf/
+
+Data Carpentry’s Geospatial Workshop http://datacarpentry.org/geospatial-workshop/
+
