@@ -64,7 +64,7 @@ library(emo)
 ## Is my data spatial?
 
 ```{r, include=FALSE}
-listings <- read_csv("./data/clean/listings.csv")
+listings <- read_csv("./data/listings.csv")
 ```
 
 ```{r}
@@ -80,7 +80,7 @@ ggplot(listings, aes(x = longitude, y = latitude)) + geom_point()
 ## Is my data spatial?
 
 ```{r, include=FALSE}
-SA2_2016_MELB <- st_read("./data/clean/SA2_2016_MELB.shp")
+SA2_2016_MELB <- st_read("./data/SA2_2016_MELB.shp")
 ```
 
 ```{r}
@@ -126,8 +126,9 @@ st_crs(SA2_2016_MELB)
 
 ## What we are going to cover 
 
-- Read, create and manipulate spatial data
+- Read and manipulate spatial data
+- Inspect tablar and spatial data
+- Join tablar and spatial data
 - Work with vector point and polygon data
 - Create an interactive map
-- Create a static map
-- Learn basics of cartography 
+

@@ -15,7 +15,17 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
 
+# Restarting work
+
+Restart session either by using GUI `Session > Restart R` or by `Ctrl + Shift + F10`.
+
+Load packages and restore your work.
+
+## Code 
+
+```{r}
 set.seed(1234)
 
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
@@ -23,8 +33,12 @@ if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
 
-SA2_SEIFA <- readRDS("data/clean/SA2_SEIFA.Rds")
+SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
 ```
+
+## Explanation
+
+Tip: clear your R console with `Ctrl + R`.
 
 # Mapping SEIFA indices in Melbourne - interactive maps
 
@@ -36,11 +50,6 @@ SA2_SEIFA <- readRDS("data/clean/SA2_SEIFA.Rds")
 tmap_mode("view")
 SA2_SEIFA %>% 
   qtm(fill = "IRSAD_d")
-```
-
-```{r}
-SA2_SEIFA %>% 
-  qtm(fill = "IRSD_s")
 ```
 
 ### Explanation
@@ -75,6 +84,7 @@ tm_shape(SA2_SEIFA) +
 
 ### Explanation
 
+`tm_shape` 
 
 ## Proportional symbol map
 
@@ -82,7 +92,7 @@ tm_shape(SA2_SEIFA) +
 
 ```{r}
 tm_shape(SA2_SEIFA) +
-  tm_borders() +
+  tm_borders(lwd = 0.5) +
   tm_bubbles(col = "IRSAD_d", size = "URP", 
              n = 10, alpha = 0.7, palette = "RdYlGn", border.lwd = 0, scale = 0.5)
 

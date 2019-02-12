@@ -39,7 +39,7 @@ Selected variables were kept and file was resaved as `csv` without any further m
 listings <- read_csv("data/raw/inside_airbnb/listings.csv") %>% 
   select(-neighbourhood_group, - minimum_nights, -number_of_reviews, -last_review, -reviews_per_month, -calculated_host_listings_count, -availability_365)
 
-write_csv(listings, "data/clean/listings.csv")
+write_csv(listings, "data/listings.csv")
 ```
 
 # SEIFA
@@ -67,7 +67,7 @@ SEIFA <- read_excel("data/raw/abs/2033055001 - sa2 indexes.xls",
                 IEO_d = as.integer(IEO_d)) %>% 
   select(-SA2_NAME16)
 
-saveRDS(SEIFA, "data/clean/SEIFA.Rds")
+saveRDS(SEIFA, "data/SEIFA.Rds")
 ```
 
 
@@ -86,7 +86,7 @@ SA2_2016_MELB <- SA2 %>%
 
 SA2_2016_MELB$SA2_MAIN16 <- as.numeric(as.character(SA2_2016_MELB$SA2_MAIN16))
 
-st_write(SA2_2016_MELB, "./data/clean/SA2_2016_MELB.shp")
+st_write(SA2_2016_MELB, "./data/SA2_2016_MELB.shp")
 
 ```
 

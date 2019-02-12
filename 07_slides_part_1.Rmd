@@ -18,6 +18,16 @@ library(tmap)
 library(emo)
 ```
 
-## Slide 1
 
-![](./images/donut.jpg)
+## Simplifying 
+
+![](./images/find_panda.png)
+
+
+## Changing representation 
+
+
+## Finding relationship 
+
+![](./images/mad_cows.JPG)
+

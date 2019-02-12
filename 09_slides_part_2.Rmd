@@ -18,6 +18,6 @@ library(tmap)
 library(emo)
 ```
 
-## Slide 1
+## Congratulations
 
-![](./images/donut.jpg)
+![](./images/dog.jpg)
