@@ -1,0 +1,28 @@
+---
+title: "R and spatial data: resources"
+author: "Radoslaw Panczak"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    number_sections: true
+    theme: united 
+    highlight: pygments 
+---
+
+Map of different geographies used by ABS http://stat.abs.gov.au/itt/r.jsp?ABSMaps
+
+Short video introducing projections https://www.youtube.com/watch?v=kIID5FDi2JQ 
+
+Learn more about simple features and `sf` library https://r-spatial.github.io/sf/
+
+Learn more about `tmap` library https://github.com/mtennekes/tmap
+
+Data Carpentry’s Geospatial Workshop http://datacarpentry.org/geospatial-workshop/
+
+Inspiration for R based spatial visualizations http://spatial.ly/r/
+
+Three part tutorial on prettyfying your`sf` & `ggplot2` static maps https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html https://www.r-spatial.org/r/2018/10/25/ggplot2-sf-2.html 
+https://www.r-spatial.org/r/2018/10/25/ggplot2-sf-3.html
