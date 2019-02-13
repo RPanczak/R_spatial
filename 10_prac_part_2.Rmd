@@ -28,7 +28,6 @@ set.seed(1234)
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
 if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
-
 if (!require("spdep")) install.packages("spdep"); library("spdep")
 
 ```
@@ -36,9 +35,6 @@ if (!require("spdep")) install.packages("spdep"); library("spdep")
 ## Load the data
 
 ```{r}
-# raw
-listings <- read_csv("./data/listings.csv")
-
 # prepared earlier
 SA2_SEIFA_proj <- readRDS("data/SA2_SEIFA.Rds") %>% 
   st_transform(3112) %>% 
@@ -48,38 +44,27 @@ SA2_SEIFA_proj <- readRDS("data/SA2_SEIFA.Rds") %>%
 View(SA2_SEIFA_proj)
 View(SA2_SEIFA_proj@data)
 
-
 ```
 
-# Spatial clustering
-
-## Spatial weights
-
-```{r}
-weights_queen <- poly2nb(SA2_SEIFA_proj)
-
-summary(weights_queen)
-
-plot(SA2_SEIFA_proj, border = "grey60")
-plot(weights_queen, coordinates(SA2_SEIFA_proj), pch = 19, cex = 0.6, add = TRUE)
-
-moran.test(SA2_SEIFA_proj$IRSAD_s, listw = nb2listw(weights_queen))
-
-```
-
-
-## Global
+# Spatial weights
 
 ```{r}
 SA2_weights_queen <- poly2nb(SA2_SEIFA_proj)
+summary(SA2_weights_queen)
 
 SA2_weights_queen_list <- nb2listw(SA2_weights_queen, style="W", zero.policy=TRUE)
 
-summary(weights_queen)
+SA2_weights_queen_list
 
 plot(SA2_SEIFA_proj, border = "grey60")
-plot(weights_queen, coordinates(SA2_SEIFA_proj), pch = 19, cex = 0.6, add = TRUE)
+plot(SA2_weights_queen, coordinates(SA2_SEIFA_proj), pch = 19, cex = 0.6, add = TRUE)
 
+```
+
+# Global spatial clustering
+
+
+```{r}
 SA2_IRSAD_s_Moran <- moran.test(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list)
 
 SA2_IRSAD_s_Moran
@@ -97,26 +82,54 @@ plot(SA2_IRSAD_s_Moran_MC)
 
 ```
 
-## Local
+# Local spatial clustering
+
 
 ```{r}
 
 SA2_IRSAD_s_lm <- localmoran(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list)
 
+class(SA2_IRSAD_s_lm)
 summary(SA2_IRSAD_s_lm)
 
-# manually make a moran plot standarize variables
+# standarize variables
 SA2_SEIFA_proj$IRSAD_s_std <- scale(SA2_SEIFA_proj$IRSAD_s)  #save to a new column
 
 # create a lagged variable
-SA2_SEIFA_proj$lag_IRSAD_s <- lag.listw(SA2_weights_queen_list, SA2_SEIFA_proj$IRSAD_s_std)
+SA2_SEIFA_proj$IRSAD_s_lag <- lag.listw(SA2_weights_queen_list, SA2_SEIFA_proj$IRSAD_s_std)
 
-plot(x = SA2_SEIFA_proj$IRSAD_s_std, y = SA2_SEIFA_proj$lag_IRSAD_s, 
-     main = " Moran Scatterplot PPOV")
-abline(h = 0, v = 0)
-abline(lm(SA2_SEIFA_proj$lag_IRSAD_s ~ SA2_SEIFA_proj$IRSAD_s_std), 
-       lty = 3, lwd = 4, col = "red")
+# extract p value from local Moran
+SA2_SEIFA_proj$IRSAD_s_lmsig <- SA2_IRSAD_s_lm[, 5] <= 0.05
 
+
+SA2_SEIFA_proj$quad_sig <- NA
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std >= 0 & SA2_SEIFA_proj$IRSAD_s_lag >= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 1
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std <= 0 & SA2_SEIFA_proj$IRSAD_s_lag <= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 2
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std >= 0 & SA2_SEIFA_proj$IRSAD_s_lag <= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 3
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std >= 0 & SA2_SEIFA_proj$IRSAD_s_lag <= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 4
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std <= 0 & SA2_SEIFA_proj$IRSAD_s_lag >= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 5  
+
+
+# Set the breaks for the thematic map classes
+breaks <- seq(1, 5, 1)
+
+# Set the corresponding labels for the thematic map classes
+labels <- c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif.")
+
+# see ?findInterval - This is necessary for making a map
+np <- findInterval(SA2_SEIFA_proj$quad_sig, breaks)
+
+# Assign colors to each map class
+colors <- c("red", "blue", "lightpink", "skyblue2", "white")
+plot(SA2_SEIFA_proj, col = colors[np])
+mtext("Local Moran's I", cex = 1.5, side = 3, line = 1)
+legend("topleft", legend = labels, fill = colors, bty = "n")
+
+tm_shape(SA2_SEIFA_proj) +
+  tm_fill(col = "quad_sig", style = "cat", 
+          palette = c("red", "blue", "lightpink", "skyblue2", "white"), 
+          labels = c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif."), 
+          title = "Local Moran's I")
 ```
 
 

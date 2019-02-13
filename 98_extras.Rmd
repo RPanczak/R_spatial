@@ -34,8 +34,6 @@ tm_shape(grid_hex_count) +
 # Correlogram 
 
 ```{r}
-
-
 SA2_IRSAD_s_corr <- sp.correlogram(neighbours = SA2_weights_queen, var = SA2_SEIFA_proj$IRSAD_s,
                                    order = 10, method = "I", style = "C")
 
@@ -44,3 +42,18 @@ library(pgirmess)
 SA2_IRSAD_s_corr <- correlog(coordinates(SA2_SEIFA_proj), SA2_SEIFA_proj$IRSAD_s, method = "Moran")
 ```
 
+# Lisa on point data
+
+
+```{r}
+if (!require("ncf")) install.packages("ncf"); library("ncf")
+
+listings <- read_csv("./data/listings.csv") %>% 
+  filter(room_type == "Private room") # %>% sample_n(500)
+
+listings_lisa <- lisa(listings$latitude, listings$longitude, listings$price, 
+                      neigh = 10, resamp = 1000, latlon = TRUE, quiet = FALSE)
+
+plot(listings_lisa)
+
+```

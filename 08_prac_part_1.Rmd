@@ -35,17 +35,8 @@ if (!require("skimr")) install.packages("skimr"); library("skimr")
 
 `set.seed` 
 
-`sjPlot `
 
-# Data: SA2s and SEIFA
 
-We will reuse data prepared yesterday.
-
-## Code
-
-```{r}
-SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
-```
 
 # Data: Airbnb in Melbourne
 
@@ -213,6 +204,12 @@ tm_shape(room_price_density$iso) +
 
 
 # Linking prices and deprivation
+
+We will reuse data prepared yesterday.
+
+```{r}
+SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
+```
 
 ## Spatial overlay
 
