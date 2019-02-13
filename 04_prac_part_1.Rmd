@@ -245,3 +245,19 @@ saveRDS(SA2_SEIFA, "data/SA2_SEIFA.Rds")
 
 2. Examine relationships between two different indices for Autralia. What kind of graphs and statistics could be useful here?
 
+# Resources
+
+Map of different geographies used by ABS http://stat.abs.gov.au/itt/r.jsp?ABSMaps
+
+Short video introducing projections https://www.youtube.com/watch?v=kIID5FDi2JQ 
+
+Learn more about simple features and `sf` library https://r-spatial.github.io/sf/
+
+Learn more about `tmap` library https://github.com/mtennekes/tmap
+
+Data Carpentry’s Geospatial Workshop http://datacarpentry.org/geospatial-workshop/
+
+Inspiration for R based spatial visualizations http://spatial.ly/r/
+
+Three part tutorial on prettyfying your`sf` & `ggplot2` static maps https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html https://www.r-spatial.org/r/2018/10/25/ggplot2-sf-2.html 
+https://www.r-spatial.org/r/2018/10/25/ggplot2-sf-3.html
