@@ -19,15 +19,31 @@ library(emo)
 ```
 
 
-## Simplifying 
+## Simplifying patterns 
 
-![](./images/find_panda.png)
+![](./images/pixel.jpg)
 
 
-## Changing representation 
+## Aggregating data
+
+Simplifying by reducing complexity of the data
+
+
+## Changing representation
+
+Simplifying by changing representation
+
+https://en.wikipedia.org/wiki/File:Bivariate_example.png
 
 
 ## Finding relationship 
 
 ![](./images/mad_cows.JPG)
 
+
+## What we are going to cover 
+
+- Read, create and manipulate spatial data
+- Work with vector point data
+- Convert point data into different representations
+- Learn about spatial joins

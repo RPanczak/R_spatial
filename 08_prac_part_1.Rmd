@@ -29,10 +29,13 @@ if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
 if (!require("tmaptools")) install.packages("tmaptools"); library("tmaptools")
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
-
 if (!require("skimr")) install.packages("skimr"); library("skimr")
 
 ```
+
+`set.seed` 
+
+`sjPlot `
 
 # Data: SA2s and SEIFA
 
@@ -96,9 +99,11 @@ Look at the difference
 slice(listings_sf, 1:5)
 ```
 
+`crs` argument
+
 http://spatialreference.org/ref/epsg/wgs-84/ 
 
-## Map of locations
+## Quick map
 
 ### Code 
 
@@ -111,6 +116,12 @@ listings_sf %>%
 ```
 
 ### Explanation
+
+`sample_n`
+
+
+
+# Mapping price - density
 
 ## Exploring attributes
 
@@ -126,9 +137,15 @@ ggplot(listings_sf, aes(price)) + geom_histogram()
 descr(listings_sf$price)
 ```
 
+look at `md` and `skew`
+
 ```{r}
 listings_sf %>% 
   ggplot(aes(room_type)) + geom_bar()
+```
+
+```{r}
+frq(listings_sf$room_type)
 ```
 
 ```{r}
@@ -137,21 +154,11 @@ listings_sf %>%
 ```
 
 
-```{r}
-listings_sf %>% 
-  sample_n(1000) %>%
-  tm_shape() + 
-  tm_dots(col = "price", style = "quantile", n = 5, palette = "seq")
-```
+## Data prepration
 
-```{r}
-listings_sf %>% 
-  sample_n(1000) %>%
-  tm_shape() + 
-  tm_dots(col = "room_type", style = "cat", n = 5, palette = "seq")
-```
+### Code 
 
-# Mapping price density 
+Changing coordinate system
 
 GDA_1994_Geoscience_Australia_Lambert
 WKID: 3112 Authority: EPSG
@@ -159,53 +166,108 @@ WKID: 3112 Authority: EPSG
 GDA_1994_Australia_Albers
 WKID: 3577 Authority: EPSG
 
-## Data preparation
-
-### Code 
-
-### Explanation
-
-## Density calculation
-
-### Code 
-
-### Explanation
-
-
 ```{r}
 listings_sf_proj <- st_transform(listings_sf, 3112)
 
-frq(listings_sf_proj$room_type)
+SA2_SEIFA_proj <- st_transform(SA2_SEIFA, 3112)
+```
 
-outline <- SA2_SEIFA %>% st_union %>% st_transform(3112)
+Creating an outline
 
-home_densities <- listings_sf_proj %>% 
-  filter(room_type == "Entire home/apt") %>% 
-  smooth_map(var = price, 
-             cover = outline, 
-             breaks = c(0, 1, 5, 10, 25, 50, 100, 250, 500, 1000))
+```{r}
+outline <- SA2_SEIFA_proj %>% st_union 
+```
 
-room_densities <- listings_sf_proj %>% 
+Simple map
+
+```{r}
+listings_sf %>% 
+  sample_n(1000) %>%
+  tm_shape() + 
+  tm_dots(col = "price", style = "quantile", n = 5, palette = "seq")
+```
+
+Density calculation
+
+```{r}
+room_price_density <- listings_sf_proj %>% 
   filter(room_type == "Private room") %>% 
-  smooth_map(var = price, 
-             cover = outline, 
-             breaks = c(0, 1, 5, 10, 25, 50, 100, 250, 500, 1000))
+  smooth_map(cover = outline, 
+             var = price, 
+             bandwidth = 0.5, 
+             breaks = c(0, 1, 5, 10, 25, 50, 100, 250, 500))
 
-tm_shape(room_densities$polygons) +
+names(room_price_density)
+
+tm_shape(room_price_density$polygons) +
   tm_fill(col = "level", palette = "YlOrRd", 
-          title = expression("Room price"))
+          title = "Airbnb room price density")
+
+tm_shape(room_price_density$iso) +
+  tm_iso(col = "level", palette = "YlOrRd", 
+         title = "Airbnb room price density ")
 
 ```
 
+### Explanation
+
+
+# Linking prices and deprivation
+
+## Spatial overlay
+
+### Code
+
+Link points to polygons aka spatial join
+
+```{r}
+listings_sf_SEIFA <- st_join(listings_sf_proj, SA2_SEIFA_proj, join = st_intersects)
+```
+
+```{r}
+slice(listings_sf_SEIFA, 1:5)
+```
+
+### Explanation
+
+## Relationship
+
+
+```{r}
+listings_sf_SEIFA %>% 
+  st_drop_geometry() %>% 
+  filter(room_type == "Private room") %>% 
+  filter(!is.na(IRSAD_d)) %>% 
+  arrange(IRSAD_d) %>% 
+  group_by(IRSAD_d) %>% 
+  descr(price)
+```
+
+```{r}
+listings_sf_SEIFA %>% 
+  st_drop_geometry() %>% 
+  filter(room_type == "Private room") %>% 
+  filter(!is.na(IRSAD_d)) %>% 
+  ggplot(aes(as.factor(IRSAD_d), price)) + 
+  geom_boxplot() + scale_y_log10()
+```
+
+
+# Saving your data
+
+```{r}
+saveRDS(listings_sf, "data/listings_sf.Rds")
+```
 
 
 # Further topics
 
-1. If room done - then hose or vice versa?
+1. Try changing `st_make_grid(n = 50, square = FALSE)` to `st_make_grid(n = 50, square = TRUE)`. What results do you get? Does the pattern change a lot? What are advantages or disatvantages of these two representations?
+
+2. Read help file of `smooth_map`. Try increasing `bandwidth` parameter.
+
+3. If room done - then hose or vice versa?
 
 # Resources
-
-Anselin, L. 1995. Local indicators of spatial association - LISA. Geographical Analysis 27:93-115.
-https://doi.org/10.1111/j.1538-4632.1995.tb00338.x
 
 

@@ -1,0 +1,46 @@
+# Hexbins
+
+
+```{r}
+grid_hex <- listings_sf_proj %>% 
+  filter(room_type == "Private room") %>% 
+  st_bbox() %>% 
+  st_as_sfc() %>% 
+  st_make_grid(n = 50, square = FALSE) %>% 
+  st_sf() %>% 
+  mutate(ID = row_number())
+
+qtm(grid_hex)
+```
+
+Link points to polygons aka spatial join
+
+```{r}
+grid_count <- st_join(filter(listings_sf_proj, room_type == "Private room"),
+                      grid_hex, join = st_intersects) %>% 
+  st_drop_geometry() %>% 
+  group_by(ID) %>% 
+  summarise(room_count = n())
+
+
+grid_hex_count <- left_join(grid_hex, grid_count, by = c("ID", "ID"))
+
+tm_shape(grid_hex_count) +
+  tm_polygons(col = "room_count", 
+              n = 5, alpha = 0.8, palette = "-RdYlGn", lwd = 0) 
+
+```
+
+# Correlogram 
+
+```{r}
+
+
+SA2_IRSAD_s_corr <- sp.correlogram(neighbours = SA2_weights_queen, var = SA2_SEIFA_proj$IRSAD_s,
+                                   order = 10, method = "I", style = "C")
+
+
+library(pgirmess)
+SA2_IRSAD_s_corr <- correlog(coordinates(SA2_SEIFA_proj), SA2_SEIFA_proj$IRSAD_s, method = "Moran")
+```
+

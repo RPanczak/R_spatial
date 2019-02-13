@@ -26,3 +26,4 @@ Inspiration for R based spatial visualizations http://spatial.ly/r/
 
 Three part tutorial on prettyfying your`sf` & `ggplot2` static maps https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html https://www.r-spatial.org/r/2018/10/25/ggplot2-sf-2.html 
 https://www.r-spatial.org/r/2018/10/25/ggplot2-sf-3.html
+

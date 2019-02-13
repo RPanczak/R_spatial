@@ -18,6 +18,19 @@ library(tmap)
 library(emo)
 ```
 
-## Congratulations
+## Finding patterns 
 
-![](./images/dog.jpg)
+![](./images/find_panda.png)
+
+
+## Quantifying patterns
+
+
+
+## What we are going to cover 
+
+- Read, create and manipulate spatial data
+- Work with vector point data
+- Learn about spatial joins
+- 
+

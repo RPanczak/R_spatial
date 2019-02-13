@@ -26,8 +26,6 @@ Load packages and restore your work.
 ## Code 
 
 ```{r}
-set.seed(1234)
-
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
 if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
@@ -39,6 +37,8 @@ SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
 ## Explanation
 
 Tip: clear your R console with `Ctrl + R`.
+
+`set.seed` 
 
 # Mapping SEIFA indices in Melbourne - interactive maps
 
