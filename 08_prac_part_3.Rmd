@@ -1,0 +1,270 @@
+---
+title: "R and spatial data: intermediate 1"
+author: "Radoslaw Panczak"
+date: 2019-02-26
+output: 
+  html_document: 
+    highlight: pygments
+    keep_md: yes
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+---
+
+# Maintenance 
+
+## Start R session and Rstudio
+
+You might want to continue using project from yesterday.
+
+## Load the libraries
+
+```{r}
+set.seed(1234)
+
+if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
+if (!require("sf")) install.packages("sf"); library("sf")
+if (!require("tmap")) install.packages("tmap"); library("tmap")
+if (!require("tmaptools")) install.packages("tmaptools"); library("tmaptools")
+if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
+if (!require("skimr")) install.packages("skimr"); library("skimr")
+
+```
+
+`set.seed` 
+
+
+
+
+# Data: Airbnb in Melbourne
+
+## Background information
+
+[Inside Airbnb](http://insideairbnb.com/about.html) is website that describes itself as:
+
+> an independent, non-commercial set of tools and data that allows you to explore how Airbnb is really being used in cities around the world. By analyzing publicly available information about a city's Airbnb's listings, Inside Airbnb provides filters and key metrics so you can see how Airbnb is being used to compete with the residential housing market.
+
+The dataset is not offically approved by Airbnb (!) but is released under open license and in the absence of other data - was used by many research projects around the world.
+
+## Reading the data
+
+### Code 
+
+```{r}
+listings <- read_csv("./data/listings.csv")
+```
+
+### Explanation
+
+point to difference `csv`
+
+## Examine the data
+
+### Code 
+
+```{r}
+slice(listings, 1:5)
+```
+
+```{r, results='asis' }
+skim(listings) %>% skimr::kable()
+```
+
+### Explanation
+
+## Turning data spatial
+
+### Code 
+
+```{r}
+listings_sf = st_as_sf(listings, coords = c("longitude", "latitude"), crs = 4326)
+```
+
+### Explanation
+
+Look at the difference
+
+```{r}
+slice(listings_sf, 1:5)
+```
+
+`crs` argument
+
+http://spatialreference.org/ref/epsg/wgs-84/ 
+
+## Quick map
+
+### Code 
+
+```{r}
+tmap_mode("view")
+
+listings_sf %>% 
+  sample_n(1000) %>% 
+  qtm()
+```
+
+### Explanation
+
+`sample_n`
+
+
+
+# Mapping price - density
+
+## Exploring attributes
+
+Map variable in your data to visual encoding on map.
+
+### Code 
+
+```{r}
+ggplot(listings_sf, aes(price)) + geom_histogram()
+```
+
+```{r}
+descr(listings_sf$price)
+```
+
+look at `md` and `skew`
+
+```{r}
+listings_sf %>% 
+  ggplot(aes(room_type)) + geom_bar()
+```
+
+```{r}
+frq(listings_sf$room_type)
+```
+
+```{r}
+listings_sf %>% 
+  ggplot(aes(room_type, price)) + geom_boxplot() + scale_y_log10()
+```
+
+
+## Data prepration
+
+### Code 
+
+Changing coordinate system
+
+GDA_1994_Geoscience_Australia_Lambert
+WKID: 3112 Authority: EPSG
+
+GDA_1994_Australia_Albers
+WKID: 3577 Authority: EPSG
+
+```{r}
+listings_sf_proj <- st_transform(listings_sf, 3112)
+
+SA2_SEIFA_proj <- st_transform(SA2_SEIFA, 3112)
+```
+
+Creating an outline
+
+```{r}
+outline <- SA2_SEIFA_proj %>% st_union 
+```
+
+Simple map
+
+```{r}
+listings_sf %>% 
+  sample_n(1000) %>%
+  tm_shape() + 
+  tm_dots(col = "price", style = "quantile", n = 5, palette = "seq")
+```
+
+Density calculation
+
+```{r}
+room_price_density <- listings_sf_proj %>% 
+  filter(room_type == "Private room") %>% 
+  smooth_map(cover = outline, 
+             var = price, 
+             bandwidth = 0.5, 
+             breaks = c(0, 1, 5, 10, 25, 50, 100, 250, 500))
+
+names(room_price_density)
+
+tm_shape(room_price_density$polygons) +
+  tm_fill(col = "level", palette = "YlOrRd", 
+          title = "Airbnb room price density")
+
+tm_shape(room_price_density$iso) +
+  tm_iso(col = "level", palette = "YlOrRd", 
+         title = "Airbnb room price density ")
+
+```
+
+### Explanation
+
+
+# Linking prices and deprivation
+
+We will reuse data prepared yesterday.
+
+```{r}
+SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
+```
+
+## Spatial overlay
+
+### Code
+
+Link points to polygons aka spatial join
+
+```{r}
+listings_sf_SEIFA <- st_join(listings_sf_proj, SA2_SEIFA_proj, join = st_intersects)
+```
+
+```{r}
+slice(listings_sf_SEIFA, 1:5)
+```
+
+### Explanation
+
+## Relationship
+
+
+```{r}
+listings_sf_SEIFA %>% 
+  st_drop_geometry() %>% 
+  filter(room_type == "Private room") %>% 
+  filter(!is.na(IRSAD_d)) %>% 
+  arrange(IRSAD_d) %>% 
+  group_by(IRSAD_d) %>% 
+  descr(price)
+```
+
+```{r}
+listings_sf_SEIFA %>% 
+  st_drop_geometry() %>% 
+  filter(room_type == "Private room") %>% 
+  filter(!is.na(IRSAD_d)) %>% 
+  ggplot(aes(as.factor(IRSAD_d), price)) + 
+  geom_boxplot() + scale_y_log10()
+```
+
+
+# Saving your data
+
+```{r}
+saveRDS(listings_sf, "data/listings_sf.Rds")
+```
+
+
+# Further topics
+
+1. Try changing `st_make_grid(n = 50, square = FALSE)` to `st_make_grid(n = 50, square = TRUE)`. What results do you get? Does the pattern change a lot? What are advantages or disatvantages of these two representations?
+
+2. Read help file of `smooth_map`. Try increasing `bandwidth` parameter.
+
+3. If room done - then hose or vice versa?
+
+# Resources
+
+

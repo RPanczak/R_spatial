@@ -11,9 +11,16 @@ output:
 
 
 
+
 ## Why analyse data?
 
 ![](./images/donut.jpg)
+
+
+## Why R?
+
+![](./images/R.jpg)
+
 
 ## Setting things in context
 
@@ -49,11 +56,6 @@ output:
 - 💻 pixels on images 🌐
 
 
-## Why R spatial?
-
-![](./images/R.jpg)
-
-
 ## Is my data spatial?
 
 
@@ -74,6 +76,7 @@ listings %>% select(-host_id) %>% slice(1:5)
 ## 5 16760 Melbour~ Colin     Port Phillip     -37.9      145. Private ~    69
 ```
 
+
 ## Is my data spatial?
 
 
@@ -82,6 +85,7 @@ ggplot(listings, aes(x = longitude, y = latitude)) + geom_point()
 ```
 
 ![](03_slides_part_1_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
 
 ## Is my data spatial?
 
@@ -96,7 +100,7 @@ SA2_2016_MELB %>% select(-starts_with("SA4")) %>% slice(1:5)
 ## Simple feature collection with 5 features and 2 fields
 ## geometry type:  MULTIPOLYGON
 ## dimension:      XY
-## bbox:           xmin: 144.3336 ymin: -38.50299 xmax: 145.8784 ymax: -37.1751
+## bbox:           xmin: 144.9267 ymin: -37.78021 xmax: 144.9869 ymax: -37.73251
 ## epsg (SRID):    NA
 ## proj4string:    +proj=longlat +ellps=GRS80 +no_defs
 ##   SA2_MAIN16        SA2_NAME16                       geometry
@@ -107,6 +111,7 @@ SA2_2016_MELB %>% select(-starts_with("SA4")) %>% slice(1:5)
 ## 5  206011109 Pascoe Vale South MULTIPOLYGON (((144.9326 -3...
 ```
 
+
 ## Is my data spatial?
 
 
@@ -116,28 +121,6 @@ ggplot(SA2_2016_MELB) + geom_sf()
 
 ![](03_slides_part_1_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
-## What is special about spatial (1)?
-
-
-```r
-table(st_geometry_type(SA2_2016_MELB))
-```
-
-```
-## 
-##           GEOMETRY              POINT         LINESTRING 
-##                  0                  0                  0 
-##            POLYGON         MULTIPOINT    MULTILINESTRING 
-##                  0                  0                  0 
-##       MULTIPOLYGON GEOMETRYCOLLECTION     CIRCULARSTRING 
-##                309                  0                  0 
-##      COMPOUNDCURVE       CURVEPOLYGON         MULTICURVE 
-##                  0                  0                  0 
-##       MULTISURFACE              CURVE            SURFACE 
-##                  0                  0                  0 
-##  POLYHEDRALSURFACE                TIN           TRIANGLE 
-##                  0                  0                  0
-```
 
 ## Vector data
 
@@ -153,7 +136,7 @@ Image Source: NEON, via Data Carpentry
 Image Source: NEON, via Data Carpentry
 
 
-## What is special about spatial (2)?
+## What is special about spatial (1)?
 
 
 ```r
@@ -171,10 +154,18 @@ st_crs(SA2_2016_MELB)
 > - ... but "To specify a location on a plane requires a map projection." [Wikipedia](https://en.wikipedia.org/wiki/Geographic_coordinate_system)
 
 
+## What is special about spatial (2)?
+
+![](./images/unfolding.PNG)
+
+Image Source: van Wijk (2008)
+
+
 ## What we are going to cover 
 
-- Read, create and manipulate spatial data
+- Read and manipulate spatial data
+- Inspect tablar and spatial data
+- Join tablar and spatial data
 - Work with vector point and polygon data
 - Create an interactive map
-- Create a static map
-- Learn basics of cartography 
+

@@ -18,9 +18,16 @@ library(tmap)
 library(emo)
 ```
 
+
 ## Why analyse data?
 
 ![](./images/donut.jpg)
+
+
+## Why R?
+
+![](./images/R.jpg)
+
 
 ## Setting things in context
 
@@ -56,11 +63,6 @@ library(emo)
 - `r emo::ji("computer")` pixels on images `r emo::ji("globe_with_meridians")`
 
 
-## Why R spatial?
-
-![](./images/R.jpg)
-
-
 ## Is my data spatial?
 
 ```{r, include=FALSE}
@@ -71,11 +73,13 @@ listings <- read_csv("./data/listings.csv")
 listings %>% select(-host_id) %>% slice(1:5)
 ```
 
+
 ## Is my data spatial?
 
 ```{r}
 ggplot(listings, aes(x = longitude, y = latitude)) + geom_point()
 ```
+
 
 ## Is my data spatial?
 
@@ -87,17 +91,13 @@ SA2_2016_MELB <- st_read("./data/SA2_2016_MELB.shp")
 SA2_2016_MELB %>% select(-starts_with("SA4")) %>% slice(1:5)
 ```
 
+
 ## Is my data spatial?
 
 ```{r}
 ggplot(SA2_2016_MELB) + geom_sf()
 ```
 
-## What is special about spatial (1)?
-
-```{r}
-table(st_geometry_type(SA2_2016_MELB))
-```
 
 ## Vector data
 
@@ -113,7 +113,7 @@ Image Source: NEON, via Data Carpentry
 Image Source: NEON, via Data Carpentry
 
 
-## What is special about spatial (2)?
+## What is special about spatial (1)?
 
 ```{r}
 st_crs(SA2_2016_MELB)
@@ -124,11 +124,18 @@ st_crs(SA2_2016_MELB)
 > - ... but "To specify a location on a plane requires a map projection." [Wikipedia](https://en.wikipedia.org/wiki/Geographic_coordinate_system)
 
 
+## What is special about spatial (2)?
+
+![](./images/unfolding.PNG)
+
+Image Source: van Wijk (2008)
+
+
 ## What we are going to cover 
 
 - Read and manipulate spatial data
-- Inspect tablar and spatial data
-- Join tablar and spatial data
-- Work with vector point and polygon data
+- Inspect spatial data
+- Join spatial data to other sources
+- Work with vector polygon data
 - Create an interactive map
 

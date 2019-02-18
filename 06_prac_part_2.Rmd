@@ -4,13 +4,13 @@ author: "Radoslaw Panczak"
 date: 2019-02-25
 output: 
   html_document: 
-    # css: custom.css
-    toc: true
+    highlight: pygments
+    keep_md: yes
+    number_sections: yes
+    theme: united
+    toc: yes
     toc_depth: 4
-    toc_float: true
-    number_sections: true
-    theme: united 
-    highlight: pygments 
+    toc_float: yes
 ---
 
 ```{r setup, include=FALSE}
