@@ -163,9 +163,10 @@ Image Source: van Wijk (2008)
 
 ## What we are going to cover 
 
-- Read and manipulate spatial data
-- Inspect tablar and spatial data
-- Join tablar and spatial data
-- Work with vector point and polygon data
+- Read and manipulate data
+- Inspect and summarize data
+- Join data from two sources
+- Work with vector polygon data
 - Create an interactive map
+- Search for help
 

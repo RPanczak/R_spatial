@@ -133,9 +133,10 @@ Image Source: van Wijk (2008)
 
 ## What we are going to cover 
 
-- Read and manipulate spatial data
-- Inspect spatial data
-- Join spatial data to other sources
+- Read and manipulate data
+- Inspect and summarize data
+- Join data from two sources
 - Work with vector polygon data
 - Create an interactive map
+- Search for help
 

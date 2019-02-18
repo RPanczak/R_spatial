@@ -1,5 +1,5 @@
 ---
-title: "R and spatial data: introduction 2"
+title: "R and spatial data: practical 2"
 author: "Radoslaw Panczak"
 date: 2019-02-25
 output: 
