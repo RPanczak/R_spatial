@@ -50,8 +50,6 @@ library(emo)
 
 ## What we are going to cover 
 
-- Read, create and manipulate spatial data
-- Work with vector polygon data
-- Improve an interactive map
+- Create an interactive map
 - Create a static map
 - Learn basics of cartography 

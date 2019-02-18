@@ -19,45 +19,47 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Restarting work
 
-Restart session either by using GUI `Session > Restart R` or by `Ctrl + Shift + F10`.
+## Session 
 
-Load packages and restore your work.
+Restart session either by using GUI `Session > Restart R` or by `Ctrl + Shift + F10`. You should start with empty "Environment". Tip: you can also clear your R console with `Ctrl + L`. 
 
-## Code 
+## Packages 
 
-```{r}
+Load packages:
+
+```{r message=FALSE}
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
 if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
+```
 
+## Data 
+
+Load data prepared during previous session:
+
+```{r}
 SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
 ```
 
-## Explanation
-
-Tip: clear your R console with `Ctrl + R`.
-
-`set.seed` 
-
 # Mapping SEIFA indices in Melbourne - interactive maps
 
-## Quick maps
+## Quick map
 
-### Code
+We already use quck map `qtm` functionality of `tmap` library. We will extend its use by providing additional argument from linked SEIFA data:
 
-```{r}
+```{r message=FALSE}
 tmap_mode("view")
 SA2_SEIFA %>% 
   qtm(fill = "IRSAD_d")
 ```
 
-### Explanation
+We get one more map of SA2s. This time it's a thematic map! We mapped `IRSAD_d` variable to assign a colour that will fill polygon of SA2 using its particular value of decile.
 
+## Improving interactive map
 
-## Improving choropleth maps
+Making quick maps can quickly become cumbersome when more options need to be specified to improve the map. We will switch to building maps layer by layer, similarly to `ggplot` package. Lets rewrite the code using more advanced syntax of `tmap`. We first define our base map using `tm_shape` function and then instruct `tmap` to treat it as layers of polygons with certain attributes:
 
-### Code
 
 ```{r}
 tm_shape(SA2_SEIFA) +
@@ -65,15 +67,12 @@ tm_shape(SA2_SEIFA) +
               n = 10, alpha = 0.7, palette = "RdYlGn", lwd = 0)
 ```
 
-### Explanation
-
-`tmaptools::palette_explorer()`
-
+Can you guess what the parameters of `tm_polygons` function are? Use `help(tm_polygons)` to learn about the one that you don't know. Try changing a colour scheme of your map. Running code `tmaptools::palette_explorer()` will help guide your choices. 
 
 ## Faceted maps
 
+`tm_facets` 
 
-### Code
 
 ```{r}
 tm_shape(SA2_SEIFA) +
@@ -82,15 +81,12 @@ tm_shape(SA2_SEIFA) +
   tm_facets(sync = TRUE, ncol = 2)
 ```
 
-### Explanation
-
-`tm_shape` 
+`col` is now `c("IRSAD_d", "IER_d")`
 
 ## Proportional symbol map
 
-### Code
 
-```{r}
+```{r message=FALSE}
 tm_shape(SA2_SEIFA) +
   tm_borders(lwd = 0.5) +
   tm_bubbles(col = "IRSAD_d", size = "URP", 
@@ -98,7 +94,6 @@ tm_shape(SA2_SEIFA) +
 
 ```
 
-### Explanation
 
 This type of map uses size of symbols to represent numeric variable on a map.
 
@@ -109,25 +104,22 @@ Interactive maps are great for exploration. On other occasions ‘static’ map 
 
 ## Quick map
 
-### Code
+```{r message=FALSE}
+tmap_mode("plot")
+```
+
 
 ```{r}
-tmap_mode("plot")
-
 tm_shape(SA2_SEIFA) +
   tm_polygons("IRSAD_d", title = "IRSAD deciles", 
               palette = "RdYlGn", n = 10, lwd = 0) 
 ```
 
 
-### Explanation
-
 First we instructed tmap package to change from interactive mode into static mode with `tmap_mode()` function. Notice that rest of parameters is the same as in interactive mode.
 
 
-## Improving choropleth maps
-
-### Code
+## Improving static map
 
 ```{r}
 tm_shape(SA2_SEIFA) +
@@ -145,8 +137,6 @@ tm_shape(SA2_SEIFA) +
 ```
 
 
-### Explanation
-
 We have built a map layer by layer, calling different functions and specifying various arguments. We also improved the cartography by providing legend and a histogram (a graph of distribution of values). 
 We specified our data source in `tm_shape()` function; many parameters indicating how polygons are displayed are specified in `tm_polygons()` function; we also added north arrow and scale with functions names appropriately; finally `tm_layout` helped us to put all small details together as legend and title). 
 
@@ -160,8 +150,4 @@ Last but not least we saved our map can be saved as file on the disk. That can b
 2. Try creating static map with proportianl symbols.
 
 3. Try creating static maps with facets.
-
-# Resources
-
-
 
