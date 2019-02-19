@@ -44,7 +44,12 @@ Short video introducing projections https://www.youtube.com/watch?v=kIID5FDi2JQ
 
 Myriahedral Projections: Jarke J. van Wijk. Unfolding the Earth: Myriahedral Projections. *The Cartographic Journa*l, Vol. 45, No. 1, pp.32-42, February 2008. https://www.win.tue.nl/~vanwijk/myriahedral/ 
 
+# Cartography
+
+A short, friendly guide to basic principles of map design by axismaps https://www.axismaps.com/guide/
 
 # Inspiration
 
 Some pretty R based spatial visualizations http://spatial.ly/r/
+
+Reddit galleryt of unusual maps https://www.reddit.com/r/MapPorn/

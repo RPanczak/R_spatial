@@ -1,5 +1,26 @@
-# Hexbins
+# Class intervals
 
+# Hexbins
+```{r}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(spData)
+library(classInt)
+
+data(jenks71, package="spData")
+pal1 <- c("wheat1", "red3")
+opar <- par(mfrow=c(2,3))
+plot(classIntervals(jenks71$jenks71, n=5, style="fixed",
+ fixedBreaks=c(15.57, 25, 50, 75, 100, 155.30)), pal=pal1, main="Fixed")
+plot(classIntervals(jenks71$jenks71, n=5, style="sd"), pal=pal1, main="Pretty standard deviations")
+plot(classIntervals(jenks71$jenks71, n=5, style="equal"), pal=pal1, main="Equal intervals")
+plot(classIntervals(jenks71$jenks71, n=5, style="quantile"), pal=pal1, main="Quantile")
+set.seed(1)
+plot(classIntervals(jenks71$jenks71, n=5, style="kmeans"), pal=pal1, main="K-means")
+plot(classIntervals(jenks71$jenks71, n=5, style="hclust", method="complete"),
+ pal=pal1, main="Complete cluster")
+
+```
 
 ```{r}
 grid_hex <- listings_sf_proj %>% 
