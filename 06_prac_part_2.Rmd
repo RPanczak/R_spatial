@@ -46,7 +46,7 @@ SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
 
 ## Quick map
 
-We already use quck map `qtm` functionality of `tmap` library. We will extend its use by providing additional argument from linked SEIFA data:
+We already know how to use quck map `qtm` functionality of `tmap` library. We will extend its use by providing additional argument from linked SEIFA data:
 
 ```{r message=FALSE}
 tmap_mode("view")
@@ -67,12 +67,11 @@ tm_shape(SA2_SEIFA) +
               n = 10, alpha = 0.7, palette = "RdYlGn", lwd = 0)
 ```
 
-Can you guess what the parameters of `tm_polygons` function are? Use `help(tm_polygons)` to learn about the one that you don't know. Try changing a colour scheme of your map. Running code `tmaptools::palette_explorer()` will help guide your choices. 
+Can you guess what the arguments of `tm_polygons` function are? Use `help(tm_polygons)` to learn about the one that you don't know. Try changing a colour scheme of your map. Running code `tmaptools::palette_explorer()` will help guide your choices. 
 
 ## Faceted maps
 
-`tm_facets` 
-
+Sometimes it might be useful to explore two variables at once. `tmap` lets you create facets (in a similar way as `ggplot` does) using `tm_facets`. We can create linked interactive display of two variables:
 
 ```{r}
 tm_shape(SA2_SEIFA) +
@@ -81,10 +80,11 @@ tm_shape(SA2_SEIFA) +
   tm_facets(sync = TRUE, ncol = 2)
 ```
 
-`col` is now `c("IRSAD_d", "IER_d")`
+Pay attention that the `col` argumant consists now of two variables combines using function call `c("IRSAD_d", "IER_d")`.
 
 ## Proportional symbol map
 
+Variables can be mapped not only to colours, but also to size. We replace `tm_polygons` call with `tm_bubbles` to get a proportional symbol map:
 
 ```{r message=FALSE}
 tm_shape(SA2_SEIFA) +
@@ -94,20 +94,21 @@ tm_shape(SA2_SEIFA) +
 
 ```
 
-
-This type of map uses size of symbols to represent numeric variable on a map.
-
+Note that the `size` argument has been mapped to `URP` variable that contains values of usual resident population in the area. In this way - the size of bubbles is now determinded by population. Can you think of advantages of such map? Are there any locations where it can be useful?
 
 # Mapping SEIFA indices in Melbourne - static maps
 
-Interactive maps are great for exploration. On other occasions ‘static’ map can be a better option, for instance when you want to include it in printed report. We will learn how to create one with slightly more advanced use of `tmap` library functions.
+Interactive maps are great for exploration. On other occasions ‘static’ map can be a better option, for instance when you want to include it in a printed report. We will learn how to create one with slightly more advanced use of `tmap` library functions.
 
 ## Quick map
+
+First we change mode of `tmap`:
 
 ```{r message=FALSE}
 tmap_mode("plot")
 ```
 
+Now we can once again create a choropleth map:
 
 ```{r}
 tm_shape(SA2_SEIFA) +
@@ -115,11 +116,11 @@ tm_shape(SA2_SEIFA) +
               palette = "RdYlGn", n = 10, lwd = 0) 
 ```
 
-
-First we instructed tmap package to change from interactive mode into static mode with `tmap_mode()` function. Notice that rest of parameters is the same as in interactive mode.
-
+Notice that the arguments are the same as in interactive mode.
 
 ## Improving static map
+
+Our map is already starting to look good. We can improve some aspects of design by adding and arranging items of the layout such as scale bar, north arrow and creating histogram of data according to classes used for mapping: 
 
 ```{r}
 tm_shape(SA2_SEIFA) +
@@ -136,9 +137,8 @@ tm_shape(SA2_SEIFA) +
             legend.outside = T)
 ```
 
-
 We have built a map layer by layer, calling different functions and specifying various arguments. We also improved the cartography by providing legend and a histogram (a graph of distribution of values). 
-We specified our data source in `tm_shape()` function; many parameters indicating how polygons are displayed are specified in `tm_polygons()` function; we also added north arrow and scale with functions names appropriately; finally `tm_layout` helped us to put all small details together as legend and title). 
+We specified our data source in `tm_shape()` function; many arguments indicating how polygons are displayed are specified in `tm_polygons()` function; we also added north arrow and scale with functions names appropriately; finally `tm_layout` helped us to put all small details together as legend and title). 
 
 Last but not least we saved our map can be saved as file on the disk. That can be done with a call `tmap_save(tmap_last(), "path_to_save/name.png")`. Notice that we used function inside a finction there to use last displayed map.
 
