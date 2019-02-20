@@ -9,28 +9,29 @@ output:
     widescreen: yes
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 
-library(tidyverse)
-library(sf)
-library(tmap)
-library(emo)
-```
-
-## Finding patterns 
-
-![](./images/find_panda.png)
+## Spatial data
 
 
-## Quantifying patterns
+## Neighbours
+
+
+## Global autocorrelation 
+
+
+## Global autocorrelation 
+
+
+## Local autocorrelation 
+
+
+## Local autocorrelation 
 
 
 
 ## What we are going to cover 
 
-- Read, create and manipulate spatial data
-- Work with vector point data
-- Learn about spatial joins
-- 
-
+- Learn about alternative way of representing spatial data in R
+- Explore spatial correlation
+- Search for clusters and hotspots 
+- Determine significance of results

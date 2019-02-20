@@ -44,9 +44,21 @@ Short video introducing projections https://www.youtube.com/watch?v=kIID5FDi2JQ
 
 Myriahedral Projections: Jarke J. van Wijk. Unfolding the Earth: Myriahedral Projections. *The Cartographic Journa*l, Vol. 45, No. 1, pp.32-42, February 2008. https://www.win.tue.nl/~vanwijk/myriahedral/ 
 
+
 # Cartography
 
 A short, friendly guide to basic principles of map design by axismaps https://www.axismaps.com/guide/
+
+
+# Geospatial analysis
+
+"Applied Spatial Data Analysis with R" book is a goto resouce explaining many concepts of spatial analysis and providing R code https://asdar-book.org/.
+
+Theory behind many ideas and concepts can be found in "Geospatial Analysis - A comprehensive guide - 2018" book available at https://www.spatialanalysisonline.com/ (browse content at https://www.spatialanalysisonline.com/HTML/index.html). Chapter on global autocorrelation for instance is here https://www.spatialanalysisonline.com/HTML/index.html?global_spatial_autocorrelation.htm and local - here https://www.spatialanalysisonline.com/HTML/index.html?local_indicators_of_spatial_as.htm
+
+Original work on Moran's I is: Moran, P.A.P. (1950). "Notes on Continuous Stochastic Phenomena". *Biometrika*. **37**(1): 17–23. https://doi.org/10.2307/2332142
+
+Original work on LISA is: Anselin, L. (1995)  "Local indicators of spatial association - LISA". *Geographical Analysis* **27**:93-115. https://doi.org/10.1111/j.1538-4632.1995.tb00338.x
 
 # Inspiration
 

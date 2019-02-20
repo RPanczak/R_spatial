@@ -17,11 +17,13 @@ output:
 
 ## Start R session and Rstudio
 
-You might want to continue using project from yesterday.
+Continue your work using project settings from yesterday.
 
 ## Load the libraries
 
-```{r}
+Grab libraries needed for practical:
+
+```{r message=FALSE}
 set.seed(1234)
 
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
@@ -29,14 +31,19 @@ if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
 if (!require("tmaptools")) install.packages("tmaptools"); library("tmaptools")
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
-if (!require("skimr")) install.packages("skimr"); library("skimr")
+if (!require("skimr")) install.packages("skimr"); library("skimr") 
 
 ```
 
-`set.seed` 
+Notice the function `set.seed`. It is used to set the seed for random number generator and makes sure we all get the same results in situations when they are used, such as selecting random observations from data.
 
+## Data 
 
+Load data prepared during previous session:
 
+```{r}
+SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
+```
 
 # Data: Airbnb in Melbourne
 
@@ -46,201 +53,299 @@ if (!require("skimr")) install.packages("skimr"); library("skimr")
 
 > an independent, non-commercial set of tools and data that allows you to explore how Airbnb is really being used in cities around the world. By analyzing publicly available information about a city's Airbnb's listings, Inside Airbnb provides filters and key metrics so you can see how Airbnb is being used to compete with the residential housing market.
 
-The dataset is not offically approved by Airbnb (!) but is released under open license and in the absence of other data - was used by many research projects around the world.
+The dataset is not offically approved by Airbnb (sic!) but is released under open license and in the absence of other open data - was used by many research projects around the world.
 
 ## Reading the data
-
-### Code 
 
 ```{r}
 listings <- read_csv("./data/listings.csv")
 ```
 
-### Explanation
-
-point to difference `csv`
+Data are stored in the form of "comma separated values" (`csv`) file - text file where values are separated by commas and new lines. This is common format to exchange the data since it offers simplicity and can be read by virtually any analytical software. We can read it into R in several ways - we choose `read_csv` function of `readr` package.
 
 ## Examine the data
 
-### Code 
+First five lines of the file will give us some idea of what data we have:
 
 ```{r}
 slice(listings, 1:5)
 ```
 
+More information can be obtained with `skim` function of `skimr` package:
+
 ```{r, results='asis' }
 skim(listings) %>% skimr::kable()
 ```
 
-### Explanation
+What can you learn from this summary? Do we deal with spatial data?
 
 ## Turning data spatial
 
-### Code 
+Our dataset contains fields of `latitude` and `longitude` but it is not a spatial object. We can turn it into simple features one with `st_as_sf` function
 
 ```{r}
-listings_sf = st_as_sf(listings, coords = c("longitude", "latitude"), crs = 4326)
+listings_sf <- st_as_sf(listings, coords = c("longitude", "latitude"), 
+                        crs = 4326, remove = FALSE)
 ```
 
-### Explanation
+We specify `crs` to code `4326` whcih is used for latitude and longitude coordinates on the World Geodetic System 1984 (WGS84) reference [ellipsoid](https://epsg.io/4326). I also opted for argument `remove = FALSE` - try using help to see what that means and what happens when you change it.
 
-Look at the difference
+Now see what changed in the dataset:
 
 ```{r}
 slice(listings_sf, 1:5)
 ```
 
-`crs` argument
-
-http://spatialreference.org/ref/epsg/wgs-84/ 
-
 ## Quick map
 
-### Code 
+We now have spatial data so can plot it on the map. However the dataset is rather large and plotting it might not be that informative and slow to interact with. Let's try a random sample of 1000 listings selected from our data with function `sample_n`: 
 
-```{r}
+```{r message=FALSE}
 tmap_mode("view")
 
 listings_sf %>% 
-  sample_n(1000) %>% 
+  sample_n(1000) %>%
   qtm()
 ```
 
-### Explanation
+The map already gets busy and we still have `r nrow(listings_sf) - 1000` more locations to plot!
 
-`sample_n`
+# Mapping locations - density
+
+We will try to simplify the number of counts by aggregating them to a grid. Certain spatial operations work better when using projected coordinate system. We will start by converting our data from CRS:
+
+> GDA_1994_Geoscience_Australia_Lambert
+WKID: 3112 Authority: EPSG
+
+To: 
+
+> GDA_1994_Australia_Albers
+WKID: 3577 Authority: EPSG
+
+By doing that we moved from unprojected (a.k.a. Geographic) system that used Latitude/Longitude for referencing location on the ellipsoid Earth, to projected system  with X and Y coordinates (aka Easting/Northing) for referencing location on 2D representations of Earth
+
+```{r}
+listings_sf <- st_transform(listings_sf, 3112)
+```
+
+See the difference between lattitude and longitude fields and geometry now:
+
+```{r}
+listings_sf %>% 
+  select(latitude, longitude, geometry) %>% 
+  slice(1:5)
+```
 
 
+## Creating grid
+
+We will now use locations of Airbnb listings to create regular, hexagonal grid over area of Melbourne where we have the data:
+
+```{r}
+grid_hex <- listings_sf %>% 
+  st_bbox() %>% 
+  st_as_sfc() %>% 
+  st_make_grid(n = 50, square = FALSE) %>% 
+  st_sf() %>% 
+  mutate(ID = row_number())
+```
+
+There are few steps needed to achieve that. In short, we extracted spatial extent (aka bounding box) of data of locations with `st_bbox` function, created a `sf` object with that that was used to construct the grid `st_make_grid` of dimensions 50 x 50 cells and finally we added variable derived from row numbers to be able to later merge data.
+
+Let's see how the grid looks like on map:
+
+```{r}
+grid_hex %>% 
+  qtm(fill = NULL)
+```
+
+## Spatial join 
+
+We can now link points to polygons, or in other words perform a spatial join. This type of join can be used to bring information from one data source to the other and in our case we will assign each Airbnb listings to our newly created hexagon. We will then aggregate data and create new variable that summarises how many Airbnb listings there are in each hexagon:
+
+```{r}
+grid_count <- st_join(listings_sf, grid_hex,join = st_intersects) %>% 
+  st_drop_geometry() %>% 
+  group_by(ID) %>% 
+  summarise(room_count = n())
+```
+
+Check how the data looks like using `slice`. 
+
+Because data is not spatial, we cannot map it. Instead we have to merge it back to the grid by performing non-spatial join using "key" variable that identidfies the same observations in both datased. In our case this variable is `ID`:
+
+```{r}
+grid_hex_count <- left_join(grid_hex, grid_count, by = c("ID", "ID"))
+```
+
+How Airbnb listings do we have in each hexagon: 
+
+Turns out majority of them have no Airbnbs at all and gave the value of `NA`. For the remaing part we have a very skewed distribution, ie. many locations with few counts.. and few with many:
+
+```{r message=FALSE, warning=FALSE}
+grid_hex_count %>% 
+  ggplot(aes(room_count)) +
+  geom_histogram()
+```
+
+You can get more detailed frequencies by running `frq(grid_hex_count$room_count)`. 
+
+Finally, let's plot a map, removing hexagons with no lisitngs:
+
+```{r message=FALSE}
+grid_hex_count %>% 
+  filter(!is.na(room_count)) %>% 
+  tm_shape() +
+  tm_polygons(col = "room_count", 
+              style = "fixed",
+              breaks = c(0, 10, 25, 50, 100, 250, 500, 2500, 5000),
+              alpha = 0.85, palette = "-RdYlGn", lwd = 0) 
+
+```
 
 # Mapping price - density
 
 ## Exploring attributes
 
-Map variable in your data to visual encoding on map.
+At next step we will try to map a variable in our data to visual encoding on map and change its representation. We will examine how price of listing varies across space.  
 
-### Code 
+To get some understanding lets first look at the data ignoring space. 
 
-```{r}
-ggplot(listings_sf, aes(price)) + geom_histogram()
+Histogram is a good place to start: 
+
+```{r message=FALSE}
+listings_sf %>% 
+  ggplot(aes(price)) + geom_histogram()
 ```
+
+Again we have very skewd data - descriptive statistics confirm that:
 
 ```{r}
 descr(listings_sf$price)
 ```
 
-look at `md` and `skew`
+We also have to remember that listings can belong to different categories:
 
 ```{r}
 listings_sf %>% 
   ggplot(aes(room_type)) + geom_bar()
 ```
 
+To get the percentages we can use `sjmisc` package function `frq`:
+
 ```{r}
 frq(listings_sf$room_type)
 ```
 
-```{r}
+Clearly the price must depend on listing type. Box plot can be helpful to check that:
+
+```{r message=FALSE, warning=FALSE}
 listings_sf %>% 
   ggplot(aes(room_type, price)) + geom_boxplot() + scale_y_log10()
 ```
 
+Pay atention to `scale_y_log10()` option - I transformed the Y axis to be in logarithmic scale which helps us see the differences when dealing with skewed data. What is the difference when you remove this option?
 
-## Data prepration
 
-### Code 
+## Quick map
 
-Changing coordinate system
-
-GDA_1994_Geoscience_Australia_Lambert
-WKID: 3112 Authority: EPSG
-
-GDA_1994_Australia_Albers
-WKID: 3577 Authority: EPSG
-
-```{r}
-listings_sf_proj <- st_transform(listings_sf, 3112)
-
-SA2_SEIFA_proj <- st_transform(SA2_SEIFA, 3112)
-```
-
-Creating an outline
-
-```{r}
-outline <- SA2_SEIFA_proj %>% st_union 
-```
-
-Simple map
+Once again let's look at sample of 1000 rooms, but this time use colour to differentiate the prices: 
 
 ```{r}
 listings_sf %>% 
+  filter(room_type == "Private room") %>% 
   sample_n(1000) %>%
   tm_shape() + 
   tm_dots(col = "price", style = "quantile", n = 5, palette = "seq")
 ```
 
-Density calculation
+It is hard to see the patterns here so we will try to create a different representation of this map.
+
+## Data prepration
+
+First, we will need to create boundary of area for which we want to map the price. We can use our map of SA2 areas. Let's change the coordinate system to match the listings data:
 
 ```{r}
-room_price_density <- listings_sf_proj %>% 
+SA2_SEIFA <- st_transform(SA2_SEIFA, 3112)
+```
+
+## Density calculation
+
+`tmap` package provides capability for simple 2D kernel density estimator `smooth_map` . We will use it to map density of `price` (argument `var`!) variable per 1 km2 (argument `bandwith`!) selecting only private rooms from the dataset:
+
+```{r message=FALSE, results='hide'}
+room_price_density <- listings_sf %>% 
   filter(room_type == "Private room") %>% 
-  smooth_map(cover = outline, 
+  smooth_map(cover = SA2_SEIFA, 
              var = price, 
              bandwidth = 0.5, 
              breaks = c(0, 1, 5, 10, 25, 50, 100, 250, 500))
-
-names(room_price_density)
-
-tm_shape(room_price_density$polygons) +
-  tm_fill(col = "level", palette = "YlOrRd", 
-          title = "Airbnb room price density")
-
-tm_shape(room_price_density$iso) +
-  tm_iso(col = "level", palette = "YlOrRd", 
-         title = "Airbnb room price density ")
-
 ```
 
-### Explanation
+Examine the density object: 
 
+```{r}
+names(room_price_density)
+```
+
+It turns out different representations were created. We can now use them to create maps. First the polygons:
+
+```{r}
+tm_shape(room_price_density$polygons) +
+  tm_fill(col = "level", palette = "-RdYlGn", 
+          title = "Airbnb room price density")
+```
+
+Now contour lines:
+
+```{r}
+tm_shape(room_price_density$iso) +
+  tm_iso(col = "level", palette = "-RdYlGn", 
+         title = "Airbnb room price density ")
+```
+
+It's easier to see how price clearly depends on centrality of the listing.
 
 # Linking prices and deprivation
 
-We will reuse data prepared yesterday.
+We will look at one more possibility of examining how the price varies in space. This time we will use spatial join to bring information about SEIFA indices to each listing.
 
-```{r}
-SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
-```
 
 ## Spatial overlay
 
-### Code
-
-Link points to polygons aka spatial join
+We can link polygons to points in a similar way we obtained counts of listings in each hexagon. Such "spatial join" performed with the use of `st_join` function will assign values of SEIFA polygons to each listing point by "intersecting" or "overlaying them. This is possible because both of our dataset are geographical and we transformed them to the same CRS.
 
 ```{r}
-listings_sf_SEIFA <- st_join(listings_sf_proj, SA2_SEIFA_proj, join = st_intersects)
+listings_sf_SEIFA <- st_join(listings_sf, SA2_SEIFA, join = st_intersects)
 ```
+
+Now our listings have SEIFA indices fromSA2 area they belong to:
 
 ```{r}
 slice(listings_sf_SEIFA, 1:5)
 ```
 
-### Explanation
-
 ## Relationship
 
+Having price and SEIFA data together we can now examine relationship between them. 
+
+We can use `st_drop_geometry` function to get rid of geographical features of the data and turn it into normal data frame that will allow us do some calculations. Here is the tabulation of frequencies of deciles: 
 
 ```{r}
 listings_sf_SEIFA %>% 
   st_drop_geometry() %>% 
   filter(room_type == "Private room") %>% 
   filter(!is.na(IRSAD_d)) %>% 
-  arrange(IRSAD_d) %>% 
-  group_by(IRSAD_d) %>% 
-  descr(price)
+  group_by(room_type) %>% 
+  frq(IRSAD_d)
 ```
 
-```{r}
+Clearly more roioms are located in areas with higher scores. 
+
+
+Box plot of price across deciles of the index can help to visualize if there is a difference in price:
+
+```{r message=FALSE, warning=FALSE}
 listings_sf_SEIFA %>% 
   st_drop_geometry() %>% 
   filter(room_type == "Private room") %>% 
@@ -249,10 +354,21 @@ listings_sf_SEIFA %>%
   geom_boxplot() + scale_y_log10()
 ```
 
+Using score instead of decilescan also be helpful:
 
-# Saving your data
+```{r message=FALSE, warning=FALSE}
+listings_sf_SEIFA %>% 
+  st_drop_geometry() %>% 
+  filter(room_type == "Private room") %>% 
+  filter(!is.na(IRSAD_d)) %>% 
+  ggplot(aes(IRSAD_s, price)) + 
+  geom_point(alpha = 0.25) + scale_y_log10() + 
+  geom_smooth()
+```
 
-```{r}
+It seems there is a slight increase of price. It might be worth investigating further and writing a report on it? 
+
+```{r, eval=FALSE, include=FALSE}
 saveRDS(listings_sf, "data/listings_sf.Rds")
 ```
 
@@ -261,10 +377,8 @@ saveRDS(listings_sf, "data/listings_sf.Rds")
 
 1. Try changing `st_make_grid(n = 50, square = FALSE)` to `st_make_grid(n = 50, square = TRUE)`. What results do you get? Does the pattern change a lot? What are advantages or disatvantages of these two representations?
 
-2. Read help file of `smooth_map`. Try increasing `bandwidth` parameter.
+2. Try aggregating data into hexagons or squares depending on `room_type`. Is distribution of  `Entire home/apt` different than `Private room`?
 
-3. If room done - then hose or vice versa?
-
-# Resources
+3. Redo price mapping changing `room_type` to `Entire home/apt`. What differences / similarities can you see? 
 
 

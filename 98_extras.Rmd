@@ -1,6 +1,5 @@
 # Class intervals
 
-# Hexbins
 ```{r}
 knitr::opts_chunk$set(echo = FALSE)
 
@@ -11,70 +10,178 @@ data(jenks71, package="spData")
 pal1 <- c("wheat1", "red3")
 opar <- par(mfrow=c(2,3))
 plot(classIntervals(jenks71$jenks71, n=5, style="fixed",
- fixedBreaks=c(15.57, 25, 50, 75, 100, 155.30)), pal=pal1, main="Fixed")
+                    fixedBreaks=c(15.57, 25, 50, 75, 100, 155.30)), pal=pal1, main="Fixed")
 plot(classIntervals(jenks71$jenks71, n=5, style="sd"), pal=pal1, main="Pretty standard deviations")
 plot(classIntervals(jenks71$jenks71, n=5, style="equal"), pal=pal1, main="Equal intervals")
 plot(classIntervals(jenks71$jenks71, n=5, style="quantile"), pal=pal1, main="Quantile")
 set.seed(1)
 plot(classIntervals(jenks71$jenks71, n=5, style="kmeans"), pal=pal1, main="K-means")
 plot(classIntervals(jenks71$jenks71, n=5, style="hclust", method="complete"),
- pal=pal1, main="Complete cluster")
+     pal=pal1, main="Complete cluster")
 
 ```
 
+
+
+# Lisa on point data
+
+
 ```{r}
-grid_hex <- listings_sf_proj %>% 
+
+if (!require("ncf")) install.packages("ncf"); library("ncf")
+
+listings_sf_proj$X <-  st_coordinates(listings_sf_proj)[ , 1]
+listings_sf_proj$Y <-  st_coordinates(listings_sf_proj)[ , 2]
+
+# plot(listings_sf_proj$X, listings_sf_proj$longitude)
+
+listings_sf_proj <- listings_sf_proj %>% 
+  select(-latitude, -longitude)
+
+
+listings_room <- listings_sf_proj %>% 
   filter(room_type == "Private room") %>% 
-  st_bbox() %>% 
-  st_as_sfc() %>% 
-  st_make_grid(n = 50, square = FALSE) %>% 
-  st_sf() %>% 
-  mutate(ID = row_number())
+  sample_n(500)
 
-qtm(grid_hex)
+listings_lisa <- lisa(listings_room$X, listings_room$Y, listings_room$price, 
+                      neigh = 10, resamp = 1000, latlon = FALSE, quiet = FALSE)
+
+plot(listings_lisa)
+
 ```
 
-Link points to polygons aka spatial join
-
 ```{r}
-grid_count <- st_join(filter(listings_sf_proj, room_type == "Private room"),
-                      grid_hex, join = st_intersects) %>% 
+library(sp)
+library(spdep)
+
+listings <- read_csv("./data/listings.csv") %>% 
+  # filter(room_type == "Private room") %>%
+  filter(room_type == "Entire home/apt") %>%
+  filter(price > 1)
+
+coordinates(listings) <- ~ longitude + latitude
+
+View(listings)
+class(listings)
+str(listings)
+names(listings)
+head(listings@data)
+head(listings@coords)
+
+neigh_4 <- knn2nb(knearneigh(listings, k = 4, longlat = TRUE))
+neigh_7 <- knn2nb(knearneigh(listings, k = 7, longlat = TRUE))
+neigh_9 <- knn2nb(knearneigh(listings, k = 9, longlat = TRUE))
+
+neigh_4
+class(neigh_4)
+names(neigh_4)
+
+# plot(outline, border = "grey")
+# plot(neigh_7, coordinates(listings))
+# plot(diffnb(neigh_9, neigh_4), xy, add=TRUE, col="red", lty=2)
+# title(main="Differences between Euclidean and Great Circle k=4 neighbours")
+
+moran.test(listings$price, listw = nb2listw(neigh_4))
+
+moran.mc(listings$price, listw = nb2listw(neigh_4), nsim = 999)
+
+moran.plot(listings$price, listw = nb2listw(neigh_4))
+
+lm <- localmoran(listings$price, listw = nb2listw(neigh_4))
+
+summary(lm)
+
+# standarize variables
+listings$price_std <- scale(listings$price) 
+
+# create a lagged variable
+listings$price_lag <- lag.listw(nb2listw(neigh_4), listings$price_std)
+
+# extract p value from local Moran
+listings$price_sig <- lm[, 5] <= 0.05
+
+listings$quad_sig <- NA
+listings@data[(listings$price_std >= 0 & listings$price_lag >= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 1
+listings@data[(listings$price_std <= 0 & listings$price_lag <= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 2
+listings@data[(listings$price_std >= 0 & listings$price_lag <= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 3
+listings@data[(listings$price_std >= 0 & listings$price_lag <= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 4
+listings@data[(listings$price_std <= 0 & listings$price_lag >= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 5  
+
+frq(listings$quad_sig)
+
+# Set the breaks for the thematic map classes
+breaks <- seq(1, 5, 1)
+
+# Set the corresponding labels for the thematic map classes
+labels <- c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif.")
+
+# see ?findInterval - This is necessary for making a map
+np <- findInterval(listings$quad_sig, breaks)
+
+# Assign lisa colors to each map class
+tmap_mode("plot")
+
+tm_shape(listings) +
+  tm_dots(col = "quad_sig", style = "cat", 
+          palette = c("red", "blue", "lightpink", "skyblue2", "white"), 
+          labels = c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif."), 
+          title = "Local Moran's I")
+
+tmap_mode("view")
+
+st_as_sf(listings) %>% 
+  filter(!is.na(quad_sig)) %>% 
+  tm_shape() +
+  tm_dots(col = "quad_sig", style = "cat", 
+          palette = c("red", "blue", "lightpink", "skyblue2", "white"), 
+          labels = c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif."), 
+          title = "Local Moran's I",
+          popup.vars = c("name", "price", "quad_sig"))
+
+listings <- st_as_sf(listings) %>% 
+  st_set_crs(4326) %>% 
+  st_transform(3112)
+  
+temp <- st_join(listings, SA2_SEIFA_proj, join = st_intersects)
+
+temp %>% 
   st_drop_geometry() %>% 
-  group_by(ID) %>% 
-  summarise(room_count = n())
+  filter(!is.na(IRSAD_d)) %>% 
+  ggplot(aes(as.factor(quad_sig), price)) + 
+  geom_boxplot() + scale_y_log10()
 
-
-grid_hex_count <- left_join(grid_hex, grid_count, by = c("ID", "ID"))
-
-tm_shape(grid_hex_count) +
-  tm_polygons(col = "room_count", 
-              n = 5, alpha = 0.8, palette = "-RdYlGn", lwd = 0) 
+temp %>% 
+  st_drop_geometry() %>% 
+  filter(!is.na(IRSAD_d)) %>% 
+  ggplot(aes(as.factor(IRSAD_d), fill = as.factor(quad_sig))) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent)
 
 ```
 
 # Correlogram 
 
 ```{r}
-SA2_IRSAD_s_corr <- sp.correlogram(neighbours = SA2_weights_queen, var = SA2_SEIFA_proj$IRSAD_s,
-                                   order = 10, method = "I", style = "C")
+# method "corr" for correlation, "I" for Moran's I, "C" for Geary's C
 
+listings_corr_corr <- sp.correlogram(neighbours = neigh_9, var = listings$price,
+                                order = 9, method = "corr", zero.policy = TRUE)
+listings_corr_corr
+plot(listings_corr_corr)
 
-library(pgirmess)
-SA2_IRSAD_s_corr <- correlog(coordinates(SA2_SEIFA_proj), SA2_SEIFA_proj$IRSAD_s, method = "Moran")
-```
+listings_corr_I <- sp.correlogram(neighbours = neigh_9, var = listings$price,
+                                order = 9, method = "I", zero.policy = TRUE)
+listings_corr_I
+plot(listings_corr_I)
 
-# Lisa on point data
+listings_corr_C <- sp.correlogram(neighbours = neigh_9, var = listings$price,
+                                order = 9, method = "C", zero.policy = TRUE)
+listings_corr_C
+plot(listings_corr_C)
 
-
-```{r}
-if (!require("ncf")) install.packages("ncf"); library("ncf")
-
-listings <- read_csv("./data/listings.csv") %>% 
-  filter(room_type == "Private room") # %>% sample_n(500)
-
-listings_lisa <- lisa(listings$latitude, listings$longitude, listings$price, 
-                      neigh = 10, resamp = 1000, latlon = TRUE, quiet = FALSE)
-
-plot(listings_lisa)
+# library(pgirmess)
+# listings_corr <- correlog(coordinates(listings), listings$price, method = "Moran")
+# listings_corr
+# plot(listings_corr)
 
 ```

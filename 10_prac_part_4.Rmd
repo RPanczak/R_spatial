@@ -19,122 +19,214 @@ output:
 
 Use keyboard shortcut `Ctrl + Shift + F10`
 
-
 ## Load the libraries
 
-```{r}
+```{r message=FALSE}
 set.seed(1234)
 
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
 if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
 if (!require("spdep")) install.packages("spdep"); library("spdep")
+if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
 
+tmap_mode("view")
 ```
 
 ## Load the data
 
 ```{r}
 # prepared earlier
-SA2_SEIFA_proj <- readRDS("data/SA2_SEIFA.Rds") %>% 
+SA2_SEIFA <- readRDS("data/SA2_SEIFA.Rds")
+```
+
+# From `sf` to `sp` 
+
+So far we worked with spatial objects represented by simple features from `sf` library. Long before `sf` library appeared R used different representation of spatial objects provided by `sp` library. Many packages might still depend on it so we will learn how to transform the data between then.
+
+One notable example is `spdep` package that offers very powerful se tof tools to analyse spatial patterns of data.
+
+We will reproject our SA2 & SEIFA data prepared before and convert it to `sp` object using `as` function:
+
+```{r}
+SA2_SEIFA_proj <- SA2_SEIFA %>% 
   st_transform(3112) %>% 
   filter(!is.na(IRSAD_s)) %>% 
   as("Spatial")
-
-View(SA2_SEIFA_proj)
-View(SA2_SEIFA_proj@data)
-
 ```
 
-# Spatial weights
+Our object is now of a different class:
 
 ```{r}
-SA2_weights_queen <- poly2nb(SA2_SEIFA_proj)
+class(SA2_SEIFA_proj)
+```
+
+Because of that it has different properties and will behave differently. For instance. We cannot simply view the data associated with polygons:
+
+```{r}
+View(SA2_SEIFA_proj)
+```
+
+Instead of that we have to access so called data "slot" by using `@` notation:
+```{r}
+View(SA2_SEIFA_proj@data)
+```
+
+Luckily, `tmap` library can work with both `sf` and `sp` objects so all we have learned so far can be still used. Try creating a quick map (`qtm` function) with `SA2_SEIFA_proj`.
+
+# Spatial neighbours
+
+In order to examine relationship between regions we have to define how we would like to define who is included as a neighbour. One common approach is to define "queen" type of neighbouring (queen being relation to the queen's movement in chess). Picture might give it better overview that description. We can create neighbours list from polygon list with `poly2nb` function:
+
+```{r}
+SA2_weights_queen <- poly2nb(SA2_SEIFA_proj, queen = TRUE)
 summary(SA2_weights_queen)
+```
 
+We can now turn this object into spatial weights that are required by some tools:
+
+```{r}
 SA2_weights_queen_list <- nb2listw(SA2_weights_queen, style="W", zero.policy=TRUE)
-
 SA2_weights_queen_list
+```
 
+Finally, let's plot the object to see how polygons are connected:
+
+```{r}
 plot(SA2_SEIFA_proj, border = "grey60")
 plot(SA2_weights_queen, coordinates(SA2_SEIFA_proj), pch = 19, cex = 0.6, add = TRUE)
-
 ```
+
+We now defined all polygons that touch any part of their boundary to become neighbours. We will now work with statistics that use this neighbours to determine degree of global and local clustering.
 
 # Global spatial clustering
 
+In order to check if our data is clustered in space we could use Moran's I test for spatial autocorrelation. `moran.test` function from `spdep` package will perform that:
 
 ```{r}
-SA2_IRSAD_s_Moran <- moran.test(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list)
-
-SA2_IRSAD_s_Moran
-
-moran.plot(SA2_SEIFA_proj$IRSAD_s, listw = nb2listw(SA2_weights_queen, style = "C"))
-
-SA2_IRSAD_s_Moran_MC <- moran.mc(SA2_SEIFA_proj$IRSAD_s,
-                                SA2_weights_queen_list,
-                                nsim = 999)
-
-SA2_IRSAD_s_Moran_MC
-
-plot(SA2_IRSAD_s_Moran_MC)
-
-
+(SA2_IRSAD_s_Moran <- moran.test(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list))
 ```
+
+Values of I usually range from −1 to +1. Values significantly below -1/(N-1) indicate negative spatial autocorrelation and values significantly above -1/(N-1) indicate positive spatial autocorrelation. 
+
+The significance of the statistic can be obtained from the permutation test:
+
+```{r}
+(SA2_IRSAD_s_Moran_MC <- moran.mc(SA2_SEIFA_proj$IRSAD_s,
+                                 SA2_weights_queen_list,
+                                 nsim = 999))
+```
+
+We can also get some insights into spatial patterning of the data by using Moran scatterplot, which plots data against its spatially lagged values, 
+
+```{r}
+moran.plot(SA2_SEIFA_proj$IRSAD_s, listw = nb2listw(SA2_weights_queen),
+           xlab = "ISRAD score", ylab = "Lag of ISRAD score")
+```
+
 
 # Local spatial clustering
 
+Moran's I tells us if our data are globally clustered without indicating where exactly it is happening. We can learn about location of clusters and outliers by using local indicators of spatial association (LISA).
+
+## Data preparation 
+
+We first prepare our data by creating a standardized version of it using `scale` function. We also prepare spatially lagged variable using spatial weights we created above.
 
 ```{r}
+SA2_SEIFA_proj$IRSAD_s_std <- scale(SA2_SEIFA_proj$IRSAD_s) 
 
-SA2_IRSAD_s_lm <- localmoran(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list)
-
-class(SA2_IRSAD_s_lm)
-summary(SA2_IRSAD_s_lm)
-
-# standarize variables
-SA2_SEIFA_proj$IRSAD_s_std <- scale(SA2_SEIFA_proj$IRSAD_s)  #save to a new column
-
-# create a lagged variable
 SA2_SEIFA_proj$IRSAD_s_lag <- lag.listw(SA2_weights_queen_list, SA2_SEIFA_proj$IRSAD_s_std)
+```
 
-# extract p value from local Moran
+## LISA
+
+LISA analysis can be performed using `localmoran` function from `spdep` package. 
+
+```{r}
+SA2_IRSAD_s_lm <- localmoran(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list)
+```
+
+We obtain an aobject of localmoran class that stores five results:
+
+```{r}
+summary(SA2_IRSAD_s_lm)
+```
+
+Where values indicate:
+
+*Ii* - local moran statistic
+*E.Ii* - expectation of local moran statistic
+*Var.Ii* - variance of local moran statistic
+*Z.Ii* - standard deviate of local moran statistic
+*Pr()* - p-value of local moran statistic
+
+We can extract values of significane test fromthe fifth column of results.
+
+```{r}
 SA2_SEIFA_proj$IRSAD_s_lmsig <- SA2_IRSAD_s_lm[, 5] <= 0.05
+```
 
+First we create a variable with four classes depending on which quadrant the region lies on the scaterplot of standardized versus lagged values.
 
+```{r}
+SA2_SEIFA_proj$quad <- NA
+SA2_SEIFA_proj@data[SA2_SEIFA_proj$IRSAD_s_std > 0 & SA2_SEIFA_proj$IRSAD_s_lag > 0, "quad"] <- 1
+SA2_SEIFA_proj@data[SA2_SEIFA_proj$IRSAD_s_std < 0 & SA2_SEIFA_proj$IRSAD_s_lag < 0, "quad"] <- 2
+SA2_SEIFA_proj@data[SA2_SEIFA_proj$IRSAD_s_std > 0 & SA2_SEIFA_proj$IRSAD_s_lag < 0, "quad"] <- 3
+SA2_SEIFA_proj@data[SA2_SEIFA_proj$IRSAD_s_std < 0 & SA2_SEIFA_proj$IRSAD_s_lag > 0, "quad"] <- 4
+```
+
+We can repeat the step additionally marking results significant depending on p-value obtained from the `localmoran` test.
+
+```{r}
 SA2_SEIFA_proj$quad_sig <- NA
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std >= 0 & SA2_SEIFA_proj$IRSAD_s_lag >= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 1
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std <= 0 & SA2_SEIFA_proj$IRSAD_s_lag <= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 2
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std >= 0 & SA2_SEIFA_proj$IRSAD_s_lag <= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 3
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std >= 0 & SA2_SEIFA_proj$IRSAD_s_lag <= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 4
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std <= 0 & SA2_SEIFA_proj$IRSAD_s_lag >= 0) & (SA2_IRSAD_s_lm[, 5] <= 0.05), "quad_sig"] <- 5  
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std > 0 & SA2_SEIFA_proj$IRSAD_s_lag > 0) & (SA2_IRSAD_s_lm[, 5] < 0.05), "quad_sig"] <- 1
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std < 0 & SA2_SEIFA_proj$IRSAD_s_lag < 0) & (SA2_IRSAD_s_lm[, 5] < 0.05), "quad_sig"] <- 2
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std > 0 & SA2_SEIFA_proj$IRSAD_s_lag < 0) & (SA2_IRSAD_s_lm[, 5] < 0.05), "quad_sig"] <- 3
+SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std < 0 & SA2_SEIFA_proj$IRSAD_s_lag > 0) & (SA2_IRSAD_s_lm[, 5] < 0.05), "quad_sig"] <- 4
+SA2_SEIFA_proj@data[SA2_IRSAD_s_lm[, 5] >= 0.05, "quad_sig"] <- 5  
+```
 
+Now we are ready to map our results. Each value belongs to one quadrant
 
-# Set the breaks for the thematic map classes
-breaks <- seq(1, 5, 1)
+```{r}
+frq(SA2_SEIFA_proj$quad)
+```
 
-# Set the corresponding labels for the thematic map classes
-labels <- c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif.")
+We can map it into four categories.
 
-# see ?findInterval - This is necessary for making a map
-np <- findInterval(SA2_SEIFA_proj$quad_sig, breaks)
-
-# Assign colors to each map class
-colors <- c("red", "blue", "lightpink", "skyblue2", "white")
-plot(SA2_SEIFA_proj, col = colors[np])
-mtext("Local Moran's I", cex = 1.5, side = 3, line = 1)
-legend("topleft", legend = labels, fill = colors, bty = "n")
-
+```{r}
 tm_shape(SA2_SEIFA_proj) +
-  tm_fill(col = "quad_sig", style = "cat", 
-          palette = c("red", "blue", "lightpink", "skyblue2", "white"), 
-          labels = c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif."), 
+  tm_fill(col = "quad", alpha = 0.5, style = "cat",
+          palette = c("red", "blue", "lightpink", "skyblue2"),
+          labels = c("High-High", "Low-Low", "High-Low", "Low-High"),
           title = "Local Moran's I")
 ```
 
+Taking itnto account significance of results, we can add one morecategory to the results for regions that are not significantly different according to permutation test:
 
-# Resources
+```{r}
+frq(SA2_SEIFA_proj$quad_sig)
+```
 
-Anselin, L. 1995. Local indicators of spatial association - LISA. Geographical Analysis 27:93-115.
-https://doi.org/10.1111/j.1538-4632.1995.tb00338.x
+Since we only have first and second category, we modify our `palette` and `labels` arguments and also add white colour for insignificat results:
+
+```{r}
+tm_shape(SA2_SEIFA_proj) +
+  tm_fill(col = "quad_sig", alpha = 0.5, style = "cat",
+          # palette = c("red", "blue", "lightpink", "skyblue2", "white"), 
+          # labels = c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif."), 
+          palette = c("red", "blue", NA), 
+          labels = c("High-High", "Low-Low", "Not Signif."), 
+          title = "Local Moran's I")
+```
+
+How does that map compare to original map of IRSAD score and deciles?
+
+# Further topics
+
+1. Construct neighbours using argument `queen = FALSE`. What differences can you see. In what types of situations would you expect it boe the biggest issue?
+
+2. Examine global and local autocorrelation of other SEIFA index. 
 
