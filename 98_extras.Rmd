@@ -1,3 +1,12 @@
+
+```{r}
+library(spdep)
+library(ncf)
+library(readr)
+library(dplyr)
+library(tmap)
+```
+
 # Class intervals
 
 ```{r}
@@ -22,14 +31,11 @@ plot(classIntervals(jenks71$jenks71, n=5, style="hclust", method="complete"),
 ```
 
 
-
 # Lisa on point data
 
+## `ncf`
 
 ```{r}
-
-if (!require("ncf")) install.packages("ncf"); library("ncf")
-
 listings_sf_proj$X <-  st_coordinates(listings_sf_proj)[ , 1]
 listings_sf_proj$Y <-  st_coordinates(listings_sf_proj)[ , 2]
 
@@ -41,7 +47,7 @@ listings_sf_proj <- listings_sf_proj %>%
 
 listings_room <- listings_sf_proj %>% 
   filter(room_type == "Private room") %>% 
-  sample_n(500)
+  sample_n(500) # takes long time!
 
 listings_lisa <- lisa(listings_room$X, listings_room$Y, listings_room$price, 
                       neigh = 10, resamp = 1000, latlon = FALSE, quiet = FALSE)
@@ -50,13 +56,12 @@ plot(listings_lisa)
 
 ```
 
-```{r}
-library(sp)
-library(spdep)
+## `spdep`
 
+```{r}
 listings <- read_csv("./data/listings.csv") %>% 
-  # filter(room_type == "Private room") %>%
-  filter(room_type == "Entire home/apt") %>%
+  filter(room_type == "Private room") %>%
+  # filter(room_type == "Entire home/apt") %>%
   filter(price > 1)
 
 coordinates(listings) <- ~ longitude + latitude
@@ -72,22 +77,22 @@ neigh_4 <- knn2nb(knearneigh(listings, k = 4, longlat = TRUE))
 neigh_7 <- knn2nb(knearneigh(listings, k = 7, longlat = TRUE))
 neigh_9 <- knn2nb(knearneigh(listings, k = 9, longlat = TRUE))
 
-neigh_4
-class(neigh_4)
-names(neigh_4)
+neigh_7
+class(neigh_7)
+names(neigh_7)
 
 # plot(outline, border = "grey")
 # plot(neigh_7, coordinates(listings))
 # plot(diffnb(neigh_9, neigh_4), xy, add=TRUE, col="red", lty=2)
 # title(main="Differences between Euclidean and Great Circle k=4 neighbours")
 
-moran.test(listings$price, listw = nb2listw(neigh_4))
+moran.test(listings$price, listw = nb2listw(neigh_7))
 
-moran.mc(listings$price, listw = nb2listw(neigh_4), nsim = 999)
+moran.mc(listings$price, listw = nb2listw(neigh_7), nsim = 999)
 
-moran.plot(listings$price, listw = nb2listw(neigh_4))
+moran.plot(listings$price, listw = nb2listw(neigh_7))
 
-lm <- localmoran(listings$price, listw = nb2listw(neigh_4))
+lm <- localmoran(listings$price, listw = nb2listw(neigh_7))
 
 summary(lm)
 
@@ -95,19 +100,20 @@ summary(lm)
 listings$price_std <- scale(listings$price) 
 
 # create a lagged variable
-listings$price_lag <- lag.listw(nb2listw(neigh_4), listings$price_std)
+listings$price_lag <- lag.listw(nb2listw(neigh_7), listings$price_std)
 
 # extract p value from local Moran
+table(lm[, 5] <= 0.05)
 listings$price_sig <- lm[, 5] <= 0.05
 
 listings$quad_sig <- NA
-listings@data[(listings$price_std >= 0 & listings$price_lag >= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 1
-listings@data[(listings$price_std <= 0 & listings$price_lag <= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 2
-listings@data[(listings$price_std >= 0 & listings$price_lag <= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 3
-listings@data[(listings$price_std >= 0 & listings$price_lag <= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 4
-listings@data[(listings$price_std <= 0 & listings$price_lag >= 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 5  
+listings@data[(listings$price_std > 0 & listings$price_lag > 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 1
+listings@data[(listings$price_std < 0 & listings$price_lag < 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 2
+listings@data[(listings$price_std > 0 & listings$price_lag < 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 3
+listings@data[(listings$price_std < 0 & listings$price_lag > 0) & (lm[, 5] <= 0.05), "quad_sig"] <- 4
+listings@data[lm[, 5] >= 0.05, "quad_sig"] <- 5  
 
-frq(listings$quad_sig)
+table(listings$quad_sig)
 
 # Set the breaks for the thematic map classes
 breaks <- seq(1, 5, 1)
@@ -123,8 +129,10 @@ tmap_mode("plot")
 
 tm_shape(listings) +
   tm_dots(col = "quad_sig", style = "cat", 
-          palette = c("red", "blue", "lightpink", "skyblue2", "white"), 
-          labels = c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif."), 
+          # palette = c("red", "blue", "lightpink", "skyblue2", "white"), 
+          # labels = c("High-High", "Low-Low", "High-Low", "Low-High", "Not Signif."), 
+          palette = c("red", "grey"), 
+          labels = c("High-High", "Not Signif."), 
           title = "Local Moran's I")
 
 tmap_mode("view")
@@ -141,7 +149,7 @@ st_as_sf(listings) %>%
 listings <- st_as_sf(listings) %>% 
   st_set_crs(4326) %>% 
   st_transform(3112)
-  
+
 temp <- st_join(listings, SA2_SEIFA_proj, join = st_intersects)
 
 temp %>% 
@@ -161,21 +169,23 @@ temp %>%
 
 # Correlogram 
 
+http://www.petrkeil.com/?p=1050
+
 ```{r}
 # method "corr" for correlation, "I" for Moran's I, "C" for Geary's C
 
 listings_corr_corr <- sp.correlogram(neighbours = neigh_9, var = listings$price,
-                                order = 9, method = "corr", zero.policy = TRUE)
+                                     order = 9, method = "corr", zero.policy = TRUE)
 listings_corr_corr
 plot(listings_corr_corr)
 
 listings_corr_I <- sp.correlogram(neighbours = neigh_9, var = listings$price,
-                                order = 9, method = "I", zero.policy = TRUE)
+                                  order = 9, method = "I", zero.policy = TRUE)
 listings_corr_I
 plot(listings_corr_I)
 
 listings_corr_C <- sp.correlogram(neighbours = neigh_9, var = listings$price,
-                                order = 9, method = "C", zero.policy = TRUE)
+                                  order = 9, method = "C", zero.policy = TRUE)
 listings_corr_C
 plot(listings_corr_C)
 
