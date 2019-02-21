@@ -19,7 +19,7 @@ output:
 
 Use keyboard shortcut `Ctrl + Shift + F10`
 
-## Load the libraries
+## Load the libraries 
 
 ```{r message=FALSE}
 set.seed(1234)
@@ -76,21 +76,19 @@ Luckily, `tmap` library can work with both `sf` and `sp` objects so all we have 
 
 # Spatial neighbours
 
-In order to examine relationship between regions we have to define how we would like to define who is included as a neighbour. One common approach is to define "queen" type of neighbouring (queen being relation to the queen's movement in chess). Picture might give it better overview that description. We can create neighbours list from polygon list with `poly2nb` function:
+In order to examine relationship between regions we have to define how we would like to define who is included as a neighbour. One common approach is to define "queen" type of neighbouring (queen being relation to the queen's movement in chess). We can create neighbours list from polygon list with `poly2nb` function:
 
 ```{r}
-SA2_weights_queen <- poly2nb(SA2_SEIFA_proj, queen = TRUE)
-summary(SA2_weights_queen)
+(SA2_weights_queen <- poly2nb(SA2_SEIFA_proj, queen = TRUE))
 ```
 
-We can now turn this object into spatial weights that are required by some tools:
+We can now turn this object into spatial weights (`listw` class) that are required by some tools:
 
 ```{r}
-SA2_weights_queen_list <- nb2listw(SA2_weights_queen, style="W", zero.policy=TRUE)
-SA2_weights_queen_list
+(SA2_weights_queen_list <- nb2listw(SA2_weights_queen, style="W", zero.policy=TRUE))
 ```
 
-Finally, let's plot the object to see how polygons are connected:
+Picture might give it better overview than description - let's plot the object to see how polygons are connected:
 
 ```{r}
 plot(SA2_SEIFA_proj, border = "grey60")
@@ -107,9 +105,11 @@ In order to check if our data is clustered in space we could use Moran's I test 
 (SA2_IRSAD_s_Moran <- moran.test(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list))
 ```
 
-Values of I usually range from −1 to +1. Values significantly below -1/(N-1) indicate negative spatial autocorrelation and values significantly above -1/(N-1) indicate positive spatial autocorrelation. 
+Interrpretation of the statistic is as follow:
 
-The significance of the statistic can be obtained from the permutation test:
+>Values of I usually range from −1 to +1. Values significantly below -1/(N-1) indicate negative spatial autocorrelation and values significantly above -1/(N-1) indicate positive spatial autocorrelation. 
+
+The significance of the statistic can be obtained from the Monte Carlo permutation test:
 
 ```{r}
 (SA2_IRSAD_s_Moran_MC <- moran.mc(SA2_SEIFA_proj$IRSAD_s,
@@ -124,6 +124,7 @@ moran.plot(SA2_SEIFA_proj$IRSAD_s, listw = nb2listw(SA2_weights_queen),
            xlab = "ISRAD score", ylab = "Lag of ISRAD score")
 ```
 
+Data points are divided into four "quadrants" depending on where they lie in respect to their values to lagged values relation. For instance top-right quadrant contains higher values of variable surrounded also by neighboring areas with higher values as well. That could point to spatial clustering. Bottom-right quadrant on the other hand points to high values of variable surrounded by areas with lower values - indication for spatial outliers. We will use these quadrants and visualize them on maps. 
 
 # Local spatial clustering
 
@@ -131,43 +132,19 @@ Moran's I tells us if our data are globally clustered without indicating where e
 
 ## Data preparation 
 
-We first prepare our data by creating a standardized version of it using `scale` function. We also prepare spatially lagged variable using spatial weights we created above.
+We first prepare our data by creating a standardized version of it using `scale` function. 
 
 ```{r}
 SA2_SEIFA_proj$IRSAD_s_std <- scale(SA2_SEIFA_proj$IRSAD_s) 
+```
 
+We also prepare spatially lagged variable using spatial weights we created above.
+
+```{r}
 SA2_SEIFA_proj$IRSAD_s_lag <- lag.listw(SA2_weights_queen_list, SA2_SEIFA_proj$IRSAD_s_std)
 ```
 
-## LISA
-
-LISA analysis can be performed using `localmoran` function from `spdep` package. 
-
-```{r}
-SA2_IRSAD_s_lm <- localmoran(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list)
-```
-
-We obtain an aobject of localmoran class that stores five results:
-
-```{r}
-summary(SA2_IRSAD_s_lm)
-```
-
-Where values indicate:
-
-*Ii* - local moran statistic
-*E.Ii* - expectation of local moran statistic
-*Var.Ii* - variance of local moran statistic
-*Z.Ii* - standard deviate of local moran statistic
-*Pr()* - p-value of local moran statistic
-
-We can extract values of significane test fromthe fifth column of results.
-
-```{r}
-SA2_SEIFA_proj$IRSAD_s_lmsig <- SA2_IRSAD_s_lm[, 5] <= 0.05
-```
-
-First we create a variable with four classes depending on which quadrant the region lies on the scaterplot of standardized versus lagged values.
+We can create a variable with four classes depending on which quadrant of the Moran's plot the region lies on the scaterplot of standardized versus lagged values. Four possible conditions are:
 
 ```{r}
 SA2_SEIFA_proj$quad <- NA
@@ -177,24 +154,13 @@ SA2_SEIFA_proj@data[SA2_SEIFA_proj$IRSAD_s_std > 0 & SA2_SEIFA_proj$IRSAD_s_lag 
 SA2_SEIFA_proj@data[SA2_SEIFA_proj$IRSAD_s_std < 0 & SA2_SEIFA_proj$IRSAD_s_lag > 0, "quad"] <- 4
 ```
 
-We can repeat the step additionally marking results significant depending on p-value obtained from the `localmoran` test.
-
-```{r}
-SA2_SEIFA_proj$quad_sig <- NA
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std > 0 & SA2_SEIFA_proj$IRSAD_s_lag > 0) & (SA2_IRSAD_s_lm[, 5] < 0.05), "quad_sig"] <- 1
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std < 0 & SA2_SEIFA_proj$IRSAD_s_lag < 0) & (SA2_IRSAD_s_lm[, 5] < 0.05), "quad_sig"] <- 2
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std > 0 & SA2_SEIFA_proj$IRSAD_s_lag < 0) & (SA2_IRSAD_s_lm[, 5] < 0.05), "quad_sig"] <- 3
-SA2_SEIFA_proj@data[(SA2_SEIFA_proj$IRSAD_s_std < 0 & SA2_SEIFA_proj$IRSAD_s_lag > 0) & (SA2_IRSAD_s_lm[, 5] < 0.05), "quad_sig"] <- 4
-SA2_SEIFA_proj@data[SA2_IRSAD_s_lm[, 5] >= 0.05, "quad_sig"] <- 5  
-```
-
-Now we are ready to map our results. Each value belongs to one quadrant
+Now we are ready to map our results. Each region belongs to one quadrant:
 
 ```{r}
 frq(SA2_SEIFA_proj$quad)
 ```
 
-We can map it into four categories.
+We can map it into four categories giving it descriptive names and colours matching clusters (reds) and outliers (blues):
 
 ```{r}
 tm_shape(SA2_SEIFA_proj) +
@@ -204,13 +170,42 @@ tm_shape(SA2_SEIFA_proj) +
           title = "Local Moran's I")
 ```
 
-Taking itnto account significance of results, we can add one morecategory to the results for regions that are not significantly different according to permutation test:
+## LISA
+
+LISA analysis can be performed using `localmoran` function from `spdep` package. We use variable of interest (`IRSAD_s` score) and `listw` object with spatial weights of neighbours:
+
+```{r}
+SA2_IRSAD_s_lm <- localmoran(SA2_SEIFA_proj$IRSAD_s, listw = SA2_weights_queen_list)
+```
+
+We obtain an object of localmoran class that stores five results:
+
+```{r}
+summary(SA2_IRSAD_s_lm)
+```
+
+The values here indicate:
+
+*Ii* - local moran statistic
+*E.Ii* - expectation of local moran statistic
+*Var.Ii* - variance of local moran statistic
+*Z.Ii* - standard deviate of local moran statistic
+*Pr()* - p-value of local moran statistic
+
+We can now extend quadrant assignment by additionally marking results significant depending on p-value obtained from the `localmoran` test (stored in the fifth column of results).
+
+```{r}
+SA2_SEIFA_proj$quad_sig <- SA2_SEIFA_proj$quad
+SA2_SEIFA_proj@data[SA2_IRSAD_s_lm[, 5] >= 0.05, "quad_sig"] <- 5  
+```
+
+Taking itnto account significance of results, we can add one more category to the results for regions that are not significantly different according to permutation test:
 
 ```{r}
 frq(SA2_SEIFA_proj$quad_sig)
 ```
 
-Since we only have first and second category, we modify our `palette` and `labels` arguments and also add white colour for insignificat results:
+Since we only have first and second category, we modify our `palette` and `labels` arguments and also remove colour for insignificat results:
 
 ```{r}
 tm_shape(SA2_SEIFA_proj) +

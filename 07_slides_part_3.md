@@ -41,7 +41,8 @@ Source [Wikipedia](https://en.wikipedia.org/wiki/File:Bivariate_example.png)
 
 ## What we are going to cover 
 
-- Read, create and manipulate spatial data
-- Work with vector point data
+- Create and manipulate spatial point and polygon data
 - Convert data into different representations
+- Aggregate counts of points
+- Summarize density of variable 
 - Learn about spatial joins
