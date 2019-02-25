@@ -5,7 +5,6 @@ date: 2019-02-25
 output: 
   ioslides_presentation: 
     highlight: pygments
-    keep_md: yes
     widescreen: yes
 ---
 

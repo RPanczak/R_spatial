@@ -5,7 +5,6 @@ date: 2019-02-26
 output: 
   html_document: 
     highlight: pygments
-    keep_md: yes
     number_sections: yes
     theme: united
     toc: yes

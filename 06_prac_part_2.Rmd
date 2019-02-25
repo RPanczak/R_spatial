@@ -5,7 +5,6 @@ date: 2019-02-25
 output: 
   html_document: 
     highlight: pygments
-    keep_md: yes
     number_sections: yes
     theme: united
     toc: yes
@@ -31,6 +30,7 @@ Load packages:
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
 if (!require("sf")) install.packages("sf"); library("sf")
 if (!require("tmap")) install.packages("tmap"); library("tmap")
+if (!require("tmaptools")) install.packages("tmaptools"); library("tmaptools")
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
 ```
 
