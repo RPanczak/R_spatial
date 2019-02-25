@@ -101,8 +101,8 @@ SA2_2016_MELB %>% select(-starts_with("SA4")) %>% slice(1:5)
 ## geometry type:  MULTIPOLYGON
 ## dimension:      XY
 ## bbox:           xmin: 144.9267 ymin: -37.78021 xmax: 144.9869 ymax: -37.73251
-## epsg (SRID):    NA
-## proj4string:    +proj=longlat +ellps=GRS80 +no_defs
+## epsg (SRID):    4283
+## proj4string:    +proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs
 ##   SA2_MAIN16        SA2_NAME16                       geometry
 ## 1  206011105         Brunswick MULTIPOLYGON (((144.9497 -3...
 ## 2  206011106    Brunswick East MULTIPOLYGON (((144.9734 -3...
@@ -145,8 +145,8 @@ st_crs(SA2_2016_MELB)
 
 ```
 ## Coordinate Reference System:
-##   No EPSG code
-##   proj4string: "+proj=longlat +ellps=GRS80 +no_defs"
+##   EPSG: 4283 
+##   proj4string: "+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs"
 ```
 
 > - ... allowing "every location on Earth to be specified by a set of numbers, letters or symbols" 
@@ -169,4 +169,16 @@ Image Source: van Wijk (2008)
 - Work with vector polygon data
 - Create an interactive map
 - Search for help
+
+## Setting up (1)
+
+https://github.com/RPanczak/ReduSpatial
+
+![](./images/download.PNG)
+
+## Setting up (2)
+
+In RStudio: `File >> Open Project...` choose `ReduSpatial.Rproj`
+
+![](./images/project.PNG)
 

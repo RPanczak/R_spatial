@@ -84,7 +84,8 @@ ggplot(listings, aes(x = longitude, y = latitude)) + geom_point()
 ## Is my data spatial?
 
 ```{r, include=FALSE}
-SA2_2016_MELB <- st_read("./data/SA2_2016_MELB.shp")
+SA2_2016_MELB <- st_read("./data/SA2_2016_MELB.shp") %>% 
+  st_set_crs(4283)
 ```
 
 ```{r}
@@ -139,4 +140,16 @@ Image Source: van Wijk (2008)
 - Work with vector polygon data
 - Create an interactive map
 - Search for help
+
+## Setting up (1)
+
+https://github.com/RPanczak/ReduSpatial
+
+![](./images/download.PNG)
+
+## Setting up (2)
+
+In RStudio: `File >> Open Project...` choose `ReduSpatial.Rproj`
+
+![](./images/project.PNG)
 

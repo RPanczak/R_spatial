@@ -19,19 +19,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Setting up for the course
 
-## Download the data & code
+## Open project & start a script
 
-Navigate to course [website](https://github.com/RPanczak/ReduSpatial) and download course materials
-
-![](./images/download.PNG)
-
-Extract the `ReduSpatial-master.zip` file. You should have `ReduSpatial-master` folder with multiple `html`, `Rmd` and `md` files inside.   
-
-## Start your project 
-
-1. Open Rstudio.
-2. Create a project (**inside the `ReduSpatial-master` folder that you downloaded**).
-3. Create a new R markdown document (recommended) or R script.
+1. Open a project from  (**inside the `ReduSpatial-master` folder that you downloaded**).
+2. Create a new R script : `File >> New File >> R Script` (or `Ctrl + Shift + N` keyboard shortcut).
 
 ## Conventions used in the materials
 
@@ -48,16 +39,18 @@ Use the code from materials and copy paste it to your scripts. Use the output in
 We will start our script with loading set of libraries that will allow us to read, manipulate and visualize spatial data. For the moment you can ignore the output.
 
 ```{r}
-# data manipulation and graphs
 if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
-# simple features to handle geographical data
 if (!require("sf")) install.packages("sf"); library("sf")
-# mapping library
 if (!require("tmap")) install.packages("tmap"); library("tmap")
-# summarizing data
 if (!require("sjmisc")) install.packages("sjmisc"); library("sjmisc")
 ```
 
+We will work with four packages
+
+- `tidyverse` - set of packages for data manipulation and graphs (contains `ggplot` and `dplyr`)
+- `sf` simple features package to handle geographical data
+- `tmap` mapping library
+- `sjmisc` package for tabulating & summarizing data
 
 # SA2 areas in Melbourne
 
