@@ -150,7 +150,8 @@ https://github.com/RPanczak/ReduSpatial
 
 ## Setting up (2)
 
-In RStudio: `File >> Open Project...` choose `ReduSpatial.Rproj`
+In RStudio: `File >> Open Project...` <br />
+Choose `ReduSpatial.Rproj` file.
 
 ![](./images/project.PNG)
 

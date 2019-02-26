@@ -46,6 +46,7 @@ Source [Wikipedia](https://en.wikipedia.org/wiki/File:Bivariate_example.png)
 - Summarize density of variable 
 - Learn about spatial joins
 
+
 ## Setting up (1)
 
 Download and unzip
@@ -57,6 +58,7 @@ https://github.com/RPanczak/ReduSpatial
 
 ## Setting up (2)
 
-In RStudio: `File >> Open Project...` choose `ReduSpatial.Rproj`
+In RStudio: `File >> Open Project...` <br />
+Choose `ReduSpatial.Rproj` file.
 
 ![](./images/project.PNG)
