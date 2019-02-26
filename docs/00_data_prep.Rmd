@@ -18,6 +18,9 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
 library(tidyverse)
 library(readxl)
 library(janitor)
@@ -77,7 +80,7 @@ SA2 files from [Australian Statistical Geography Standard (ASGS)](http://www.abs
 
 Data for GCC_NAME16 Greater Melbourne selected. SA3, GCC and STE variables removed. `SA2_MAIN16` was convertedfrom factor to numeric to ease joins.
 
-```{r}
+```{r warning=FALSE}
 SA2 <- st_read("./data/raw/abs/1270055001_sa2_2016_aust_shape/SA2_2016_AUST.shp") 
 
 SA2_2016_MELB <- SA2 %>% 
