@@ -45,3 +45,18 @@ Source [Wikipedia](https://en.wikipedia.org/wiki/File:Bivariate_example.png)
 - Aggregate counts of points
 - Summarize density of variable 
 - Learn about spatial joins
+
+## Setting up (1)
+
+Download and unzip
+
+https://github.com/RPanczak/ReduSpatial
+
+![](./images/download.PNG)
+
+
+## Setting up (2)
+
+In RStudio: `File >> Open Project...` choose `ReduSpatial.Rproj`
+
+![](./images/project.PNG)
