@@ -12,6 +12,8 @@ library(tmap)
 ```{r}
 knitr::opts_chunk$set(echo = FALSE)
 
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
 library(spData)
 library(classInt)
 
