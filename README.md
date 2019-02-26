@@ -8,6 +8,8 @@ Using SEIFA data from [ABS](http://www.abs.gov.au/AUSSTATS/abs@.nsf/Lookup/2033.
 
 Contents:
 
+[Course materials](https://github.com/RPanczak/ReduSpatial/archive/master.zip)
+
 [Data preparation](https://rpanczak.github.io/ReduSpatial/00_data_prep.html)
 
 CC BY-SA 4.0
