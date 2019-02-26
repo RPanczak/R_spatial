@@ -51,7 +51,7 @@ Source [Wikipedia](https://en.wikipedia.org/wiki/File:Bivariate_example.png)
 
 Download and unzip
 
-https://github.com/RPanczak/ReduSpatial
+https://is.gd/spatialcourse
 
 ![](./images/download.PNG)
 

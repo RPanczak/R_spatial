@@ -144,7 +144,7 @@ Image Source: van Wijk (2008)
 
 ## Setting up (1)
 
-https://github.com/RPanczak/ReduSpatial
+https://is.gd/spatialcourse
 
 ![](./images/download.PNG)
 
