@@ -21,4 +21,5 @@ Using SEIFA data from [ABS](http://www.abs.gov.au/AUSSTATS/abs@.nsf/Lookup/2033.
 [Practical - part 2](https://rpanczak.github.io/ReduSpatial/06_prac_part_2.html)
 
 
+
 CC BY-SA 4.0
