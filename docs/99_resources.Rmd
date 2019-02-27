@@ -14,6 +14,13 @@ output:
 
 # R
 
+## Get help from humans
+
+Brisbane Users of R Group - BURGr https://www.meetup.com/en-AU/Brisbane-Users-of-R-Group-BURGr/
+
+Hacky Hour UQ - https://rcc.uq.edu.au/meetups#hacky-hour
+
+
 ## General 
 
 Excellent (and freely available!) *R for Data Science* book comes very handy as a general R resource. Although it doesn't cover spatial data it will guide you through best practices of manipulating and graphing your data. Some chapters and parts  related to our work that can be useful are:
