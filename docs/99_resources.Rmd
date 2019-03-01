@@ -67,6 +67,8 @@ Myriahedral Projections: Jarke J. van Wijk. Unfolding the Earth: Myriahedral Pro
 
 A short, friendly guide to basic principles of map design by axismaps https://www.axismaps.com/guide/
 
+Which map should you choose? Visual Vocabulary for spatial data https://gramener.github.io/visual-vocabulary-vega/#/Spatial/
+
 "How to Lie with Maps" book will teach you to recognize (and avoid bad) tricks involved in map making https://books.google.com.au/books/about/How_to_Lie_with_Maps.html?id=Q8OHiOiYwYUC&redir_esc=y (book review http://www.cartographicperspectives.org/index.php/journal/article/view/1498/1660)
 
 ## Geospatial analysis
