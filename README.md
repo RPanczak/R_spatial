@@ -1,4 +1,4 @@
-# ReduSpatial
+# R_spatial
 
 Short course introducing spatial data in R.
 
