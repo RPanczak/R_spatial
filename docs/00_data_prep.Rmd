@@ -44,6 +44,27 @@ listings <- read_csv("data/raw/inside_airbnb/listings.csv") %>%
 write_csv(listings, "data/listings.csv")
 ```
 
+# Traffic census
+
+Traffic census for the Queensland state-declared road network obtained from https://data.qld.gov.au/dataset/traffic-census-for-the-queensland-state-declared-road-network. 
+
+Selected variables were kept and file was resaved as `csv` without any further modifications.
+
+```{r}
+TC2018 <- read_csv("data/raw/traffic_census/trafficcensus2018.csv")
+
+TC2018_geo <- TC2018 %>% 
+  st_as_sf(coords = c("LONGITUDE", "LATITUDE"), crs = 4326, remove = FALSE)
+
+tmap_mode("view")
+
+TC2018_geo %>% 
+  tm_shape() + 
+  tm_bubbles(size = "AADT", col = "PERCENT_HV", shape = 20, id = "DESCRIPTION")
+
+saveRDS(SEIFA, "data/TC2018.Rds")
+```
+
 # SEIFA
 
 ## Tabular data
@@ -77,7 +98,7 @@ saveRDS(SEIFA, "data/SEIFA.Rds")
 
 SA2 files from [Australian Statistical Geography Standard (ASGS)](http://www.abs.gov.au/ausstats/abs@.nsf/mf/1270.0.55.001)
 
-Data for GCC_NAME16 Greater Melbourne selected. SA3, GCC and STE variables removed. `SA2_MAIN16` was convertedfrom factor to numeric to ease joins.
+Data for GCC_NAME16 Greater Melbourne selected. SA3, GCC and STE variables removed. `SA2_MAIN16` was converted from factor to numeric to ease joins.
 
 ```{r warning=FALSE}
 SA2 <- st_read("./data/raw/abs/1270055001_sa2_2016_aust_shape/SA2_2016_AUST.shp") 
@@ -91,4 +112,5 @@ SA2_2016_MELB$SA2_MAIN16 <- as.numeric(as.character(SA2_2016_MELB$SA2_MAIN16))
 st_write(SA2_2016_MELB, "./data/SA2_2016_MELB.shp")
 
 ```
+
 
