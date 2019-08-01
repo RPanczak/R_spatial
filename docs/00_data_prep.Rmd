@@ -60,9 +60,9 @@ tmap_mode("view")
 
 TC2018_geo %>% 
   tm_shape() + 
-  tm_bubbles(size = "AADT", col = "PERCENT_HV", shape = 20, id = "DESCRIPTION")
+  tm_symbols(size = "AADT", col = "PERCENT_HV", alpha = 0.5, border.lwd = NA, id = "DESCRIPTION")
 
-saveRDS(SEIFA, "data/TC2018.Rds")
+saveRDS(TC2018_geo, "data/TC2018.Rds")
 ```
 
 # SEIFA
